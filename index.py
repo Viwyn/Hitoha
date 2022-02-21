@@ -272,8 +272,12 @@ async def connectchannel(ctx, channelid:int):
 async def purge(ctx, amount:int):
     await ctx.channel.purge(limit=amount)
 
+@client.command(aliases=['cal'])
+async def calculate(ctx, eq):
+    return await ctx.send(eval(eq))
+
 @client.event
 async def on_command_error(ctx, error):
     await ctx.reply(error)
 
-client.run(getenv('APHRODITE0')) 
+client.run(getenv('APHRODITE0'))
