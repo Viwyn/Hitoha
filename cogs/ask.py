@@ -8,7 +8,7 @@ class Ask(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    async def ask(self, ctx, *question):
+    async def ask(self, interaction: discord.Interaction, *question):
         response = openai.ChatCompletion.create(
         
         model="gpt-3.5-turbo",
@@ -19,7 +19,7 @@ class Ask(commands.Cog):
         )
     
         parsed = json.loads(str(response))["choices"][0]["message"]["content"]
-        await ctx.reply(parsed)
+        await interaction.reply(parsed)
 
 async def setup(bot):
     await bot.add_cog(Ask(bot))

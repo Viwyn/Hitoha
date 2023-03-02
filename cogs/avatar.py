@@ -9,7 +9,7 @@ class PfpView(View):
         self.embed0 = embed0
 
     @discord.ui.button(style=discord.ButtonStyle.primary, label="Personal Profile Picture", custom_id="personal", disabled=True)
-    async def button_callback(self, button, interaction):
+    async def button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
         otherButton = [x for x in self.children if x.custom_id == "server"][0]
         if (otherButton.style == discord.ButtonStyle.success):
             otherButton.disabled = False
@@ -18,7 +18,7 @@ class PfpView(View):
         await interaction.response.edit_message(embed = self.embed, view=self)
 
     @discord.ui.button(style=discord.ButtonStyle.success, label="Server Profile Picture", custom_id="server")
-    async def server_button_callback(self, button, interaction):
+    async def server_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
         if (self.embed0 == None):
             button.label = "Not Found"
             button.style = discord.ButtonStyle.danger
@@ -31,8 +31,9 @@ class PfpView(View):
             await interaction.response.edit_message(embed = self.embed0, view=self)
 
     async def on_timeout(self):
-        self.clear_items()
-        return
+        for child in self.children:
+            if child is discord.ui.Button:
+                child.disabled = True
 
     #button0 = discord.ui.Button(style=discord.ButtonStyle.success, label="Server Profile Picture", custom_id="pfpbutton0")
 

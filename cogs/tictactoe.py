@@ -117,27 +117,27 @@ class TicTacToe(commands.Cog):
     aliases=['ttt'], 
     description="Play a game of TicTacToe with someone."
     )
-    async def tictactoe(self, ctx, opponent:discord.User):
+    async def tictactoe(self, interaction: discord.Interaction, opponent:discord.User):
 
-        if opponent == ctx.author:
-            return await ctx.send("Can't play TicTacToe with yourself, go find some friends.")
+        if opponent == interaction.author:
+            return await interaction.send("Can't play TicTacToe with yourself, go find some friends.")
 
         def check(m):
             return m.author == opponent and (m.content == 'y' or m.content == 'n')
 
-        await ctx.send(f"{opponent.mention}, do you want to play TicTacToe with {ctx.author.display_name}? (y/n)")
+        await interaction.send(f"{opponent.mention}, do you want to play TicTacToe with {interaction.author.display_name}? (y/n)")
 
         try:
             response = await self.bot.wait_for('message', timeout=20.0, check=check)
         except asyncio.TimeoutError:
-            return await ctx.send(f"{opponent.display_name} did not accept the match.")
+            return await interaction.send(f"{opponent.display_name} did not accept the match.")
 
         if response.content == 'n':
-            return await ctx.send(f"{opponent.display_name} did not accept the match.")
+            return await interaction.send(f"{opponent.display_name} did not accept the match.")
 
-        view = tttView(ctx.author, opponent)
+        view = tttView(interaction.author, opponent)
 
-        await ctx.send(content=f"TicTacToe Match between {ctx.author.display_name} and {opponent.display_name}\nCurrent Player: {ctx.author.mention}(X)", view=view)
+        await interaction.send(content=f"TicTacToe Match between {interaction.author.display_name} and {opponent.display_name}\nCurrent Player: {interaction.author.mention}(X)", view=view)
 
 async def setup(bot):
     await bot.add_cog(TicTacToe(bot))
