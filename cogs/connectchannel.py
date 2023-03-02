@@ -8,9 +8,9 @@ class ConnectChannel(commands.Cog):
 
     @commands.command(aliases=['cc'])
     @commands.is_owner()
-    async def connectchannel(self, ctx, channelid:int):
+    async def connectchannel(self, interaction: discord.Interaction, channelid:int):
         targetChannel = await self.bot.fetch_channel(channelid)
-        homeChannel = ctx.channel
+        homeChannel = interaction.channel
 
         def check(m):
             return (m.channel == targetChannel or m.channel == homeChannel) and m.author != self.bot.user

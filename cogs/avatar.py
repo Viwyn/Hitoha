@@ -45,10 +45,10 @@ class Avatar(commands.Cog):
     aliases=['avatar'], 
     description="Gets the profile picture of the user, defaults to author if no user is specified.", 
     brief="Gets a profile picture.")
-    async def pfp(self, ctx, user:discord.User = None):
+    async def pfp(self, interaction: discord.Interaction, user:discord.User = None):
     
         if user == None:
-            user = ctx.author
+            user = interaction.author
     
         name = user.display_name
     
@@ -57,7 +57,7 @@ class Avatar(commands.Cog):
         else:
             embed = discord.Embed(title = f"Showing avatar for __{name}__", color=discord.Color.random())
     
-        embed.set_footer(text= f"Requested by {ctx.author.display_name}", icon_url=ctx.author.display_avatar.url)
+        embed.set_footer(text= f"Requested by {interaction.author.display_name}", icon_url=interaction.author.display_avatar.url)
     
         embed0 = embed.copy()
     
@@ -67,7 +67,7 @@ class Avatar(commands.Cog):
             embed.set_image(url=user.default_avatar.url)
     
         
-        member = await ctx.guild.fetch_member(user.id)
+        member = await interaction.guild.fetch_member(user.id)
     
         if member.guild_avatar != None:
             embed0.set_image(url=member.guild_avatar.url)
@@ -76,7 +76,7 @@ class Avatar(commands.Cog):
     
         view = PfpView(embed=embed, embed0=embed0)
     
-        await ctx.send(embed=embed, view=view)
+        await interaction.send(embed=embed, view=view)
 
 async def setup(bot):
     await bot.add_cog(Avatar(bot))

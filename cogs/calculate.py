@@ -6,8 +6,8 @@ class Calculate(commands.Cog):
         self.bot = bot
 
     @commands.command(aliases=['cal'])
-    async def calculate(self, ctx, eq):
-        return await ctx.send(eval(eq))
+    async def calculate(self, interaction: discord.Interaction, eq):
+        return await interaction.send(eval(eq))
     
 async def setup(bot):
     await bot.add_cog(Calculate(bot))
