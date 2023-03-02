@@ -10,7 +10,7 @@ class Music(commands.Cog):
         self.is_paused = False
 
         self.queue = []
-        self.ytdl_options = {"format": "bestaudio"}
+        self.ytdl_options = {"format": "bestaudio", "noplaylist": "True"}
         self.ffmpeg_options = {"before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5", "options": "-vn"}
 
         self.vc = None
@@ -18,7 +18,7 @@ class Music(commands.Cog):
     def yt_search(self, search):
         with YoutubeDL(self.ytdl_options) as ytdl:
             
-                info = ytdl.extract_info(f"{search}", download= False)['entries'][0]
+                info = ytdl.extract_info(f"ytsearch:{search}", download= False)['entries'][0]
                 print(info)
             
         return {"source": info['formats'][0]["url"], "title": info["title"]}

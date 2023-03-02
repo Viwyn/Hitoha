@@ -12,7 +12,7 @@ intents = discord.Intents.all()
 intents.message_content = True
 openai.api_key=getenv("OPENAI")
 
-bot = commands.Bot(command_prefix='#', intents=intents)
+bot = commands.Bot(command_prefix='!!', intents=intents)
 
 owner_id = 241138170610188288
 
@@ -32,7 +32,7 @@ async def on_command_error(ctx, error):
 async def main():
     async with bot:
         await load()
-        await bot.start(getenv('APHRODITE0'))
+        await bot.start(getenv('APHRODITE'))
 
 if __name__ == '__main__':
     asyncio.run(main())
