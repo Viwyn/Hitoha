@@ -7,14 +7,16 @@ class Ask(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command()
+    @commands.command(name="ask", description="Ask me a question")
     async def ask(self, interaction: discord.Interaction, *question):
+        if question == "":
+            question = "Hello"
+
         response = openai.ChatCompletion.create(
         
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are a discord bot called Hitoha that was coded by Riaru that replies to questions asked by users only."},
-            {"role": "system", "content": "You go by the pronouns she/her and are more feminine."},
             {"role": "user", "content": " ".join(question)}
             ]    
         )
