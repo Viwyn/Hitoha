@@ -1,2 +1,2 @@
 .env
-$GIT_DIR/cogs/__pycache__/
+cogs/__pycache__/

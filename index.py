@@ -32,7 +32,7 @@ async def on_command_error(ctx, error):
 async def main():
     async with bot:
         await load()
-        await bot.start(getenv('HITOHA'))
+        await bot.start(getenv('HITOMA'))
 
 if __name__ == '__main__':
     asyncio.run(main())

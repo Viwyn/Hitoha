@@ -9,28 +9,35 @@ class Music(commands.Cog):
         self.is_playing = False
         self.is_paused = False
 
+        self.now_playing = ""
+
         self.queue = []
-        self.ytdl_options = {"format": "bestaudio", "noplaylist": "True"}
+        self.ytdl_options = {"format": "bestaudio", "noplaylist": "True", "quiet": "True"}
         self.ffmpeg_options = {"before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5", "options": "-vn"}
 
         self.vc = None
 
-    def yt_search(self, search):
+    async def yt_search(self, search, interaction: discord.Interaction):
+        print(f"Searching: {search} ({interaction.author.display_name})")
         with YoutubeDL(self.ytdl_options) as ytdl:
-            
+            try:
                 info = ytdl.extract_info(f"ytsearch:{search}", download= False)['entries'][0]
+            except Exception:
+                return False
             
+        print(f"Found: {info['title']}")
         return {"source": info['formats'][0]["url"], "title": info["title"]}
     
     async def next_song(self):
-        if len(self.queue) > 0:
+        if len(self.queue) > 0 and self.is_playing:
             self.is_playing = True
 
             song = self.queue[0][0]['source']
+            self.now_playing = self.queue[0][0]['title']
 
             self.queue.pop(0)
 
-            self.vc.play(discord.FFmpegPCMAudio(song, **self.ffmpeg_options), after=lambda e: self.next_song())
+            self.vc.play(discord.FFmpegPCMAudio(song, **self.ffmpeg_options), after=lambda e: self.bot.loop.create_task(self.next_song()))
 
         else:
             self.is_playing = False
@@ -52,25 +59,28 @@ class Music(commands.Cog):
             else:
                 await self.vc.move_to(self.queue[0][1])
 
+            await interaction.send(f"Now Playing: {self.queue[0][0]['title']}")
+
             self.queue.pop(0)
 
-            self.vc.play(discord.FFmpegPCMAudio(song, **self.ffmpeg_options), after=lambda e: self.next_song())
+            self.vc.play(discord.FFmpegPCMAudio(song, **self.ffmpeg_options), after=lambda e: self.bot.loop.create_task(self.next_song()))
 
     @commands.command(name= "play", aliases=["p"], help="Plays a song from youtube")
     async def play(self, interaction: discord.Interaction, *search):
         search_query = " ".join(search)
 
-        vc = interaction.author.voice.channel
+        vc = interaction.author.voice
         if vc is None:
             await interaction.reply("Connect to a voice channel first")
         elif self.is_paused:
             self.vc.resume()
         else:
-            song = self.yt_search(search_query)
+            vc = vc.channel
+            song = await self.yt_search(search_query, interaction)
             if song == False:
                 await interaction.reply("Could not get the song, try a different search")
             else:
-                await interaction.send(f"Adding song {song['title']}")
+                await interaction.send(f"Added song {song['title']} to position {len(self.queue)+1}")
                 self.queue.append([song, vc])
 
                 if self.is_playing == False:
