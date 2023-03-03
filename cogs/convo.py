@@ -13,6 +13,10 @@ class Convo(commands.Cog):
     @commands.command(name="convo", description="Start a conversation with me")
     async def convo(self, interaction: discord.Interaction):
         author = interaction.author.id
+
+        if author in self.convo_data:
+            return await interaction.send("You are already having a conversation with me")
+
         channel = interaction.channel.id
 
         convo_info = {"channel": channel, 
