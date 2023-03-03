@@ -33,10 +33,11 @@ class Convo(commands.Cog):
         
         while(True):
             try:
-                response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=  self.convo_data[author]["history"]
-                )
+                async with interaction.channel.typing():
+                    response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=  self.convo_data[author]["history"]
+                    )
 
                 parsed = json.loads(str(response))["choices"][0]["message"]["content"]
                 await interaction.send(parsed)

@@ -12,14 +12,15 @@ class Ask(commands.Cog):
         if question == "":
             question = "Hello"
 
-        response = openai.ChatCompletion.create(
-        
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "You are a discord bot called Hitoha that was coded by Riaru that replies to questions asked by users only."},
-            {"role": "user", "content": " ".join(question)}
-            ]    
-        )
+        async with interaction.channel.typing():
+            response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            max_tokens=2000,
+            messages=[
+                {"role": "system", "content": "You are a discord bot called Hitoha that was coded by Riaru that replies to questions asked by users only."},
+                {"role": "user", "content": " ".join(question)}
+                ]    
+            )
     
         parsed = json.loads(str(response))["choices"][0]["message"]["content"]
         await interaction.reply(parsed)

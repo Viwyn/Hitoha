@@ -9,7 +9,8 @@ class Music(commands.Cog):
         self.is_playing = False
         self.is_paused = False
 
-        self.now_playing = ""
+        self.now_playing = {}
+        self.is_looping = False
 
         self.queue = []
         self.ytdl_options = {"format": "bestaudio", "noplaylist": "True", "quiet": "True"}
@@ -19,6 +20,7 @@ class Music(commands.Cog):
 
     async def yt_search(self, search, interaction: discord.Interaction):
         print(f"Searching: {search} ({interaction.author.display_name})")
+        await interaction.send(f"Searching for \"{search}\"")
         with YoutubeDL(self.ytdl_options) as ytdl:
             try:
                 info = ytdl.extract_info(f"ytsearch:{search}", download= False)['entries'][0]
@@ -29,15 +31,19 @@ class Music(commands.Cog):
         return {"source": info['formats'][0]["url"], "title": info["title"]}
     
     async def next_song(self):
-        if len(self.queue) > 0 and self.is_playing:
+        if self.is_looping:
+            song = self.now_playing["source"]
+            self.vc.play(discord.FFmpegPCMAudio(song, **self.ffmpeg_options), after=lambda e: self.bot.loop.create_task(self.next_song()))
+
+        elif len(self.queue) > 0 and self.is_playing:
             self.is_playing = True
 
             song = self.queue[0][0]['source']
             self.now_playing = self.queue[0][0]['title']
 
-            self.queue.pop(0)
-
             self.vc.play(discord.FFmpegPCMAudio(song, **self.ffmpeg_options), after=lambda e: self.bot.loop.create_task(self.next_song()))
+
+            self.now_playing = self.queue.pop(0)[0]
 
         else:
             self.is_playing = False
@@ -61,9 +67,9 @@ class Music(commands.Cog):
 
             await interaction.send(f"Now Playing: {self.queue[0][0]['title']}")
 
-            self.queue.pop(0)
-
             self.vc.play(discord.FFmpegPCMAudio(song, **self.ffmpeg_options), after=lambda e: self.bot.loop.create_task(self.next_song()))
+
+            self.now_playing = self.queue.pop(0)[0]
 
     @commands.command(name= "play", aliases=["p"], help="Plays a song from youtube")
     async def play(self, interaction: discord.Interaction, *search):
@@ -147,9 +153,23 @@ class Music(commands.Cog):
             self.is_paused = False
             await self.vc.disconnect()
 
+    @commands.command(name="np", aliases=["nowplaying"], help="Shows the current song playing")
+    async def np(self, interaction: discord.Interaction):
+        print(self.now_playing)
+        await interaction.send(f"Now Playing: \n{self.now_playing['title']}")
 
+    @commands.command(name="loop", help="Loops the current playing song.")
+    async def loop(self, interaction: discord.Interaction):
+        vc = interaction.author.voice
+        if vc is None:
+            return await interaction.reply("Connect to a voice channel first")
 
-
+        if self.is_looping:
+            self.is_looping = False
+            await interaction.send(f"Stopped looping.")
+        else:
+            self.is_looping = True
+            await interaction.send(f"Looping {self.now_playing['title']}")
 
 async def setup(bot):
     await bot.add_cog(Music(bot))
