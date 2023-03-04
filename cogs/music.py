@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from youtube_dl import YoutubeDL
+from random import shuffle
 
 class Music(commands.Cog):
     def __init__(self, bot):
@@ -9,7 +10,7 @@ class Music(commands.Cog):
         self.now_playing = {}
 
         self.queue_data = {}
-        self.ytdl_options = {"format": "bestaudio", "noplaylist": "True", "quiet": "True"}
+        self.ytdl_options = {"format": "bestaudio", "noplaylist": "True", 'quiet': True}
         self.ffmpeg_options = {"before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5", "options": "-vn"}
 
     async def yt_search(self, search, interaction: discord.Interaction):
@@ -18,7 +19,8 @@ class Music(commands.Cog):
         with YoutubeDL(self.ytdl_options) as ytdl:
             try:
                 info = ytdl.extract_info(f"ytsearch:{search}", download= False)['entries'][0]
-            except Exception:
+            except Exception as e:
+                print(e)
                 return False
             
         print(f"Found: {info['title']}")
@@ -27,14 +29,14 @@ class Music(commands.Cog):
     async def next_song(self, guild: int):
         if self.queue_data[guild]["looping"]:
             song = self.queue_data[guild]["now_playing"]["source"]
-            self.vc.play(discord.FFmpegPCMAudio(song, **self.ffmpeg_options), after=lambda e: self.bot.loop.create_task(self.next_song(guild)))
+            self.queue_data[guild]["channel"].play(discord.FFmpegPCMAudio(song, **self.ffmpeg_options), after=lambda e: self.bot.loop.create_task(self.next_song(guild)))
 
         elif len(self.queue_data[guild]["queue"]) > 0 and self.queue_data[guild]["is_playing"]:
             self.queue_data[guild]["is_playing"] = True
 
             song = self.queue_data[guild]["queue"][0]['source']
 
-            self.vc.play(discord.FFmpegPCMAudio(song, **self.ffmpeg_options), after=lambda e: self.bot.loop.create_task(self.next_song(guild)))
+            self.queue_data[guild]["channel"].play(discord.FFmpegPCMAudio(song, **self.ffmpeg_options), after=lambda e: self.bot.loop.create_task(self.next_song(guild)))
 
             self.queue_data[guild]["now_playing"] = self.queue_data[guild]["queue"].pop(0)
 
@@ -132,7 +134,6 @@ class Music(commands.Cog):
             
             if len(self.queue_data[interaction.guild.id]["queue"]) > 0:
                 self.queue_data[interaction.guild.id]["channel"].stop()
-                await self.play_song(interaction)
                 await interaction.send("I skipped to the next song")
             else:
                 self.queue_data[interaction.guild.id]["channel"].stop()
@@ -186,6 +187,34 @@ class Music(commands.Cog):
         else:
             self.queue_data[interaction.guild.id]["looping"] = True
             await interaction.send(f"Looping {self.queue_data[interaction.guild.id]['now_playing']['title']}")
+
+    @commands.command(name="shuffle", help="Shuffles the song queue")
+    async def shuffle(self, interaction: discord.Interaction):
+        vc = interaction.author.voice
+
+        if vc is None:
+            return await interaction.reply("Connect to a voice channel first")
+
+        if interaction.guild.id not in self.queue_data:
+            return await interaction.send("There are no song queues for this server")
+
+        shuffle(self.queue_data[interaction.guild.id]["queue"])
+
+        await interaction.send("Queue is now shuffled")
+
+    @commands.command(name="move", help="Moves the position of songs in the queue")
+    async def move(self, interaction: discord.Interaction, target:int, loc:int):
+        vc = interaction.author.voice
+
+        if vc is None:
+            return await interaction.reply("Connect to a voice channel first")
+
+        if interaction.guild.id not in self.queue_data:
+            return await interaction.send("There are no song queues for this server")
+        
+        await interaction.send(f"Moving {self.queue_data[interaction.guild.id]['queue'][target-1]['title']} to index {loc}")
+
+        self.queue_data[interaction.guild.id]["queue"].insert(loc-1, self.queue_data[interaction.guild.id]["queue"].pop(target-1))
 
 async def setup(bot):
     await bot.add_cog(Music(bot))
