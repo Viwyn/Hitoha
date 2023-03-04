@@ -10,6 +10,10 @@ Hitoha uses "!!" as the prefix to recognise commands
   <li>pfp (returns an image of the uses profile picture and server profile picture if available)</li>
   <li>choose (randomly selects a choice from the given options)</li>
   <li>convo (starts a conversation between the bot and the user)</li>
+  <li>purge (deletes messages default: 10)</li>
+  <li>stealemote (steals the sent emote)</li>
+  <li>tictactoe (start a game of TicTacToe with someone)</li>
+  <li>calculate (gives the answer based on the equation given</li>
 </ul>
 
 # API
