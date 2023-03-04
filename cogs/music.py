@@ -116,7 +116,7 @@ class Music(commands.Cog):
         if self.queue_data[interaction.guild.id]["is_paused"]:
             self.queue_data[interaction.guild.id]["is_playing"] = True
             self.queue_data[interaction.guild.id]["is_paused"] = False
-            self.vc.resume()
+            self.queue_data[interaction.guild.id]["channel"].resume()
             await interaction.send("I resumed the song")
         else:
             await interaction.reply("I am not currently paused")
