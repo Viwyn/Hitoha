@@ -145,7 +145,7 @@ class Music(commands.Cog):
         song_list = "Up Next: \n"
 
         for no, song in enumerate(self.queue_data[interaction.guild.id]["queue"][:5]):
-            song_list += str(no+1) + ") " + song[0]["title"] + "\n"
+            song_list += str(no+1) + ") " + song["title"] + "\n"
 
         if song_list != "Up Next: \n":
             await interaction.send(song_list)
