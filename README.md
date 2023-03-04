@@ -1,7 +1,7 @@
 # Hitoha
 Hitoha is a discord bot.
 
-#Commands
+# Commands
 Hitoha uses "!!" as the prefix to recognise commands
 
 <ul>
