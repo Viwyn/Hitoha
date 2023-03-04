@@ -5,9 +5,9 @@ Hitoha is a discord bot.
 Hitoha uses "!!" as the prefix to recognise commands
 
 <ul>
-  <li>ping (pings Hitoha and sends back the latency in miliseconds</li>
+  <li>ping (pings Hitoha and sends back the latency in miliseconds)</li>
   <li>pong (same as ping)</li>
-  <li>pfp (returns an image of the uses profile picture and server profile picture if available</li>
+  <li>pfp (returns an image of the uses profile picture and server profile picture if available)</li>
   <li>choose (randomly selects a choice from the given options)</li>
   <li>convo (starts a conversation between the bot and the user)</li>
 </ul>
