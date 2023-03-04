@@ -13,7 +13,7 @@ Hitoha uses "!!" as the prefix to recognise commands
   <li>purge (deletes messages default: 10)</li>
   <li>stealemote (steals the sent emote)</li>
   <li>tictactoe (start a game of TicTacToe with someone)</li>
-  <li>calculate (gives the answer based on the equation given</li>
+  <li>calculate (gives the answer based on the equation given)</li>
 </ul>
 
 # API

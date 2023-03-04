@@ -7,7 +7,7 @@ class Purge(commands.Cog):
 
     @commands.command(name="purge", description="Deletes messages")
     @commands.has_permissions(manage_messages=True)
-    async def purge(self, interaction: discord.Interaction, amount:int):
+    async def purge(self, interaction: discord.Interaction, amount:int = 10):
         await interaction.channel.purge(limit=amount)
 
 async def setup(bot):
