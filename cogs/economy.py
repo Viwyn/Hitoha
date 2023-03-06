@@ -34,7 +34,7 @@ class Economy(commands.Cog):
                 await interaction.send(f"{user.display_name}'s balance: {record[1]}")
 
         except Error as e:
-            await interaction.send("Error, ", e)
+            await interaction.send(f"Error, {e}")
 
         finally:
             if connection.is_connected():
