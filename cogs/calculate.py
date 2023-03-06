@@ -9,7 +9,7 @@ class Calculate(commands.Cog):
     async def calculate(self, interaction: discord.Interaction, *eq):
         equation = " ".join(eq)
 
-        equation.replace("^", "**")
+        equation = equation.replace("^", "**")
 
         return await interaction.send(eval(equation))
     
