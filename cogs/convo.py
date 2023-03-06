@@ -15,7 +15,7 @@ class Convo(commands.Cog):
         author = interaction.author.id
 
         if author in self.convo_data:
-            return await interaction.send("You are already having a conversation with me")
+            return await interaction.send("")
 
         channel = interaction.channel.id
 
@@ -45,6 +45,11 @@ class Convo(commands.Cog):
                 self.convo_data[author]["history"].append({"role": "assistant", "content": parsed})
 
                 response = await self.bot.wait_for('message', timeout=30.0, check=check)
+
+                if response.content == "!!end":
+                    await interaction.send("Ending conversation")
+                    break
+
                 self.convo_data[author]["history"].append({"role": "user", "content": response.content})
 
 
