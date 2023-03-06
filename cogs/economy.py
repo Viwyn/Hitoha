@@ -28,6 +28,7 @@ class Economy(commands.Cog):
 
                 if record == None:
                     cursor.execute(f"INSERT INTO Users VALUES ({id}, 1000)")
+                    send(f"Created value for user {user.display_name}")
                     cursor.execute(f"SELECT * FROM Users WHERE id = {id}")
                     record = cursor.fetchone()
 
