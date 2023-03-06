@@ -58,5 +58,10 @@ class Convo(commands.Cog):
                 del self.convo_data[author]
                 break
 
+
+    @commands.command(name="end", hidden=True)
+    async def end(self, interaction: discord.Interaction):
+        pass
+
 async def setup(bot):
     await bot.add_cog(Convo(bot))
