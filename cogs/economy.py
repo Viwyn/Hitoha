@@ -9,7 +9,7 @@ class Economy(commands.Cog):
         self.bot = bot
 
     @commands.command(name="balance", help="Shows the balance of the user")
-    async def balance(self, interaction: discord.Interaction, user: discord.user = None):
+    async def balance(self, interaction: discord.Interaction, user: discord.User = None):
         if user == None:
             user = interaction.author
 
