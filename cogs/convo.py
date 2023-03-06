@@ -36,6 +36,7 @@ class Convo(commands.Cog):
                 async with interaction.channel.typing():
                     response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",
+                    max_tokens=2000,
                     messages=  self.convo_data[author]["history"]
                     )
 
