@@ -150,6 +150,8 @@ class Games(commands.Cog):
                     pass
                 elif dealer.value > player.value and dealer.value < 21:
                     pass
+                elif len(player.hand) == 2 and player.value == 21:
+                    pass
                 elif dealer.value < 21 and dealer.value <= player.value:
                     dealer.hit(d1)
                     continue
