@@ -136,6 +136,7 @@ class Games(commands.Cog):
                         continue
                     else:
                         stood = True
+                        continue
 
                 except asyncio.TimeoutError:
                     await interaction.send("*Game forfeited due to inactivity*")
