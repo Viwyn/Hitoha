@@ -3,6 +3,7 @@ from discord.ext import commands
 import openai
 import json
 import asyncio
+from os import remove
 
 class Convo(commands.Cog):
     def __init__(self, bot):
@@ -41,6 +42,18 @@ class Convo(commands.Cog):
                     )
 
                 parsed = json.loads(str(response))["choices"][0]["message"]["content"]
+                length = len(parsed)
+
+                if length > 2000:
+                    print(f"Error, response for {interaction.author.display_name} went over the max limit ({length}). \nSending a txt file instead")
+                    with open(f"{interaction.author.id}.txt", "a",encoding='utf-8') as file:
+                        file.write(parsed)
+
+                    with open(f"{interaction.author.id}.txt", "rb") as file:
+                        await interaction.send(content=f"Sorry,the response went over the max character limit. \nSending a txt file instead", file=discord.File(file, filename="response.txt"))
+
+                    remove(f"{interaction.author.id}.txt")
+                
                 await interaction.send(parsed)
                 self.convo_data[author]["history"].append({"role": "assistant", "content": parsed})
 
