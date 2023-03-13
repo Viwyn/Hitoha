@@ -16,7 +16,8 @@ class Convo(commands.Cog):
         author = interaction.author.id
 
         if author in self.convo_data:
-            return await interaction.send("")
+            del self.convo_data[author]
+            await interaction.send("Starting new conversation.")
 
         channel = interaction.channel.id
 
