@@ -48,6 +48,7 @@ class Convo(commands.Cog):
 
                 if response.content == "!!end":
                     await interaction.send("Ending conversation")
+                    del self.convo_data[author]
                     break
 
                 self.convo_data[author]["history"].append({"role": "user", "content": response.content})
