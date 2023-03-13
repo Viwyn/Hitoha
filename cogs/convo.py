@@ -51,11 +51,13 @@ class Convo(commands.Cog):
 
                     with open(f"{interaction.author.id}.txt", "rb") as file:
                         await interaction.send(content=f"Sorry,the response went over the max character limit. \nSending a txt file instead", file=discord.File(file, filename="response.txt"))
+                        self.convo_data[author]["history"].append({"role": "assistant", "content": parsed})
 
                     remove(f"{interaction.author.id}.txt")
                 
-                await interaction.send(parsed)
-                self.convo_data[author]["history"].append({"role": "assistant", "content": parsed})
+                else:
+                    await interaction.send(parsed)
+                    self.convo_data[author]["history"].append({"role": "assistant", "content": parsed})
 
                 response = await self.bot.wait_for('message', timeout=30.0, check=check)
 
