@@ -199,10 +199,12 @@ class Games(commands.Cog):
             msg += f'\n{interaction.author.display_name} Wins!'
             msg += f'\n+{bet}'
             cursor.execute(f"UPDATE Users SET balance = {bal[0]+bet} WHERE id = {interaction.author.id}")
+            cursor.execute(f"UPDATE Users SET bjwin = bjwin + 1 WHERE id = {interaction.author.id}")
         elif state == 'dealer':
             msg += f'\nHitoha Wins!'
             msg += f'\n-{bet}'
             cursor.execute(f"UPDATE Users SET balance = {bal[0]-bet} WHERE id = {interaction.author.id}")
+            cursor.execute(f"UPDATE Users SET bjloss = bjloss + 1 WHERE id = {interaction.author.id}")
         elif state == 'tie':
             msg += "\nGame ended in a tie!"
 
