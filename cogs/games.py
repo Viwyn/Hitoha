@@ -160,10 +160,10 @@ class Games(commands.Cog):
                     continue
 
             #check wins
-            if len(player.hand) == 5:
+            if len(player.hand) == 5 and player.value <= 21:
                 state = 'player'
                 break
-            elif len(dealer.hand) == 5:
+            elif len(dealer.hand) == 5 and dealer.value <= 21:
                 state = 'dealer'
                 break
             elif dealer.value == 21 and player.value == 21:
