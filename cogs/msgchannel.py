@@ -5,7 +5,7 @@ class MsgChannel(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command()
+    @commands.command(case_insensitive=True)
     @commands.is_owner()
     async def msgchannel(self, interaction: discord.Interaction, channelid:int, *words):
         if (len(words) == 0):

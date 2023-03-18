@@ -44,7 +44,8 @@ class Avatar(commands.Cog):
     @commands.command(
     aliases=['avatar'], 
     description="Gets the profile picture of the user, defaults to author if no user is specified.", 
-    brief="Gets a profile picture.")
+    brief="Gets a profile picture.",
+    case_insensitive=True)
     async def pfp(self, interaction: discord.Interaction, user:discord.User = None):
     
         if user == None:

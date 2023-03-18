@@ -5,7 +5,7 @@ class Calculate(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="calculate", aliases=['cal'], description="Calculate an equation")
+    @commands.command(name="calculate", aliases=['cal'], description="Calculate an equation", case_insensitive=True)
     async def calculate(self, interaction: discord.Interaction, *eq):
         equation = " ".join(eq)
 
