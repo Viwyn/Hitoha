@@ -29,14 +29,14 @@ class Music(commands.Cog):
     async def next_song(self, guild: int):
         if self.queue_data[guild]["looping"]:
             song = self.queue_data[guild]["now_playing"]["source"]
-            self.queue_data[guild]["channel"].play(discord.FFmpegPCMAudio(song, **self.ffmpeg_options), after=lambda e: self.bot.loop.create_task(self.next_song(guild)))
+            self.queue_data[guild]["channel"].play(discord.PCMVolumeTransformer((discord.FFmpegPCMAudio(song, **self.ffmpeg_options)), volume=0.1), after=lambda e: self.bot.loop.create_task(self.next_song(guild)))
 
         elif len(self.queue_data[guild]["queue"]) > 0 and self.queue_data[guild]["is_playing"]:
             self.queue_data[guild]["is_playing"] = True
 
             song = self.queue_data[guild]["queue"][0]['source']
 
-            self.queue_data[guild]["channel"].play(discord.FFmpegPCMAudio(song, **self.ffmpeg_options), after=lambda e: self.bot.loop.create_task(self.next_song(guild)))
+            self.queue_data[guild]["channel"].play(discord.PCMVolumeTransformer((discord.FFmpegPCMAudio(song, **self.ffmpeg_options)), volume=0.1), after=lambda e: self.bot.loop.create_task(self.next_song(guild)))
 
             self.queue_data[guild]["now_playing"] = self.queue_data[guild]["queue"].pop(0)
 
@@ -64,11 +64,11 @@ class Music(commands.Cog):
             
             await interaction.send(f"Now Playing: {self.queue_data[interaction.guild.id]['queue'][0]['title']}")
 
-            self.queue_data[interaction.guild.id]["channel"].play(discord.FFmpegPCMAudio(song, **self.ffmpeg_options), after=lambda e: self.bot.loop.create_task(self.next_song(interaction.guild.id)))
+            self.queue_data[interaction.guild.id]["channel"].play(discord.PCMVolumeTransformer((discord.FFmpegPCMAudio(song, **self.ffmpeg_options)), volume=0.1), after=lambda e: self.bot.loop.create_task(self.next_song(interaction.guild.id)))
 
             self.queue_data[interaction.guild.id]["now_playing"] = self.queue_data[interaction.guild.id]["queue"].pop(0)
 
-    @commands.command(name= "play", aliases=["p"], description="Plays a song from youtube", case_insensitive=True)
+    @commands.command(name= "play", aliases=["p"], description="Plays a song from youtube")
     async def play(self, interaction: discord.Interaction, *search):
         search_query = " ".join(search)
         guild = interaction.guild.id
@@ -95,7 +95,7 @@ class Music(commands.Cog):
                 if self.queue_data[guild]["is_playing"] == False:
                     await self.play_song(interaction)
 
-    @commands.command(name="pause", description="Pauses the currently playing song", case_insensitive=True)
+    @commands.command(name="pause", description="Pauses the currently playing song")
     async def pause(self, interaction: discord.Interaction):
         if interaction.guild.id not in self.queue_data:
             return await interaction.reply("I am not currently in a voice channel")
@@ -110,7 +110,7 @@ class Music(commands.Cog):
         else:
             await interaction.reply("Currently not playing any song")
 
-    @commands.command(name="resume", description="Resumes the current playing song", case_insensitive=True)
+    @commands.command(name="resume", description="Resumes the current playing song")
     async def resume(self, interaction: discord.Interaction):
         if interaction.guild.id not in self.queue_data:
             return await interaction.reply("I am not currently in a voice channel")
@@ -123,7 +123,7 @@ class Music(commands.Cog):
         else:
             await interaction.reply("I am not currently paused")
 
-    @commands.command(name="skip", description="Skips the current playing song", case_insensitive=True)
+    @commands.command(name="skip", description="Skips the current playing song")
     async def skip(self, interaction: discord.Interaction):
         if interaction.guild.id in self.queue_data:
             if interaction.author.voice.channel is None:
@@ -141,7 +141,7 @@ class Music(commands.Cog):
         else:
             await interaction.reply("I am not currently playing any song in this server")
 
-    @commands.command(name="queue", aliases=["q"], description="Shows a list of songs in queue", case_insensitive=True)
+    @commands.command(name="queue", aliases=["q"], description="Shows a list of songs in queue")
     async def queue(self, interaction: discord.Interaction):
         song_list = "Up Next: \n"
 
@@ -153,7 +153,7 @@ class Music(commands.Cog):
         else:
             await interaction.send("No songs in queue")
 
-    @commands.command(name="clear", description="Clears the song queue", case_insensitive=True)
+    @commands.command(name="clear", description="Clears the song queue")
     async def clear(self, interaction: discord.Interaction):
         if interaction.guild.id in self.queue_data and self.queue_data[interaction.guild.id]["is_playing"]:
             self.queue_data[interaction.guild.id]["channel"].stop()
@@ -161,17 +161,17 @@ class Music(commands.Cog):
         self.queue_data[interaction.guild.id]["queue"] = []
         await interaction.send("Cleared the song queue")
 
-    @commands.command(name="leave", aliases=["stop", "fuckoff"], description="Disconnects me from the vc", case_insensitive=True)
+    @commands.command(name="leave", aliases=["stop", "fuckoff"], description="Disconnects me from the vc")
     async def leave(self, interaction:discord.Interaction):
         if interaction.guild.id in self.queue_data:
             await self.queue_data[interaction.guild.id]["channel"].disconnect()
             await self.clear(interaction)
 
-    @commands.command(name="np", aliases=["nowplaying"], description="Shows the current song playing", case_insensitive=True)
+    @commands.command(name="np", aliases=["nowplaying"], description="Shows the current song playing")
     async def np(self, interaction: discord.Interaction):
         await interaction.send(f"Now Playing: \n{self.queue_data[interaction.guild.id]['now_playing']['title']}")
 
-    @commands.command(name="loop", description="Loops the current playing song.", case_insensitive=True)
+    @commands.command(name="loop", description="Loops the current playing song.")
     async def loop(self, interaction: discord.Interaction):
         vc = interaction.author.voice
 
@@ -188,7 +188,7 @@ class Music(commands.Cog):
             self.queue_data[interaction.guild.id]["looping"] = True
             await interaction.send(f"Looping {self.queue_data[interaction.guild.id]['now_playing']['title']}")
 
-    @commands.command(name="shuffle", description="Shuffles the song queue", case_insensitive=True)
+    @commands.command(name="shuffle", description="Shuffles the song queue")
     async def shuffle(self, interaction: discord.Interaction):
         vc = interaction.author.voice
 
@@ -202,7 +202,7 @@ class Music(commands.Cog):
 
         await interaction.send("Queue is now shuffled")
 
-    @commands.command(name="move", description="Moves the position of songs in the queue", case_insensitive=True)
+    @commands.command(name="move", description="Moves the position of songs in the queue")
     async def move(self, interaction: discord.Interaction, target:int, loc:int):
         vc = interaction.author.voice
 

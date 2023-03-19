@@ -6,7 +6,7 @@ class ConnectChannel(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=['cc'], case_insensitive=True)
+    @commands.command(aliases=['cc'])
     @commands.is_owner()
     async def connectchannel(self, interaction: discord.Interaction, channelid:int):
         targetChannel = await self.bot.fetch_channel(channelid)

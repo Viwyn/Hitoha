@@ -5,7 +5,7 @@ class StealEmote(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="stealemote", aliases=["yoink"], description="Takes the given emoji and adds it to the current server.", brief="Adds the emoji to the server.", case_insensitive=True)
+    @commands.command(name="stealemote", aliases=["yoink"], description="Takes the given emoji and adds it to the current server.", brief="Adds the emoji to the server.")
     async def stealemote(self, interaction: discord.Interaction, emote: discord.PartialEmoji, name = None):
         emojiData = await emote.read()
     

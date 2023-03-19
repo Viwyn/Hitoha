@@ -7,7 +7,7 @@ class Ask(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="ask", description="Ask me a question", case_insensitive=True)
+    @commands.command(name="ask", description="Ask me a question")
     async def ask(self, interaction: discord.Interaction, *, question = commands.parameter(description="The question that you want to ask me")):
         if question == "":
             question = "Hello"

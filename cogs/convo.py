@@ -11,7 +11,7 @@ class Convo(commands.Cog):
 
         self.convo_data = {}
 
-    @commands.command(name="convo", description="Start a conversation with me", case_insensitive=True)
+    @commands.command(name="convo", description="Start a conversation with me")
     async def convo(self, interaction: discord.Interaction):
         author = interaction.author.id
 
@@ -75,7 +75,7 @@ class Convo(commands.Cog):
                 break
 
 
-    @commands.command(name="end", hidden=True, case_insensitive=True)
+    @commands.command(name="end", hidden=True)
     async def end(self, interaction: discord.Interaction):
         pass
 

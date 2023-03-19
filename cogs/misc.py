@@ -4,6 +4,10 @@ import random
 from datetime import datetime, timedelta
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from time import mktime
+from voicevox import Client
+from typing import Optional
+from os import getenv, remove
+from asyncio import sleep
 
 scheduler = AsyncIOScheduler()
 
@@ -11,11 +15,11 @@ class Misc(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="choose", case_insensitive=True, description="Allow me to make a choice for you")
+    @commands.command(name="choose", description="Allow me to make a choice for you")
     async def choose(self, interaction: discord.Interaction, *choices):
         await interaction.reply(random.choice(choices))
 
-    @commands.command(name="8ball", case_insensitive=True, description="Roll the magic 8ball")
+    @commands.command(name="8ball", description="Roll the magic 8ball")
     async def _8ball(self, interaction:discord.Interaction, *args):
         outputs = [
             "It is certain",
@@ -73,7 +77,7 @@ class Misc(commands.Cog):
         
         await interaction.reply(random.choice(outputs))
     
-    @commands.command(name="remind", aliases=['remindme', 'reminder'], description="Send a reminder to you at a spefied time", case_insensitive=True)
+    @commands.command(name="remind", aliases=['remindme', 'reminder'], description="Send a reminder to you at a spefied time")
     async def remind(self, interaction: discord.Interaction, time: str = commands.parameter(description="Time in minutes(m), hours(h), day(d)"), *message):
 
         if time.lower().endswith("min"):
@@ -96,6 +100,36 @@ class Misc(commands.Cog):
 
     async def sendreminder(self, interaction, reminder):
         await interaction.reply(f"Reminder for:\n{reminder}")
+
+    @commands.command(name="speak", aliases=['speach', 'say', 'talk'], description="Speak Japanese into VC")
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    async def speak(self, interaction: discord.Interaction, speaker: Optional[int] = 2, *text):
+        msg = await interaction.reply("Processing...")
+        async with Client(base_url=getenv('VM')) as client: 
+            if len(text) <= 0:
+                return await interaction.reply("no text given")
+            
+            line = " ".join(text)
+
+            audio_query = await client.create_audio_query(text=line, speaker=speaker) 
+            filename = f"{interaction.author.id}.wav"
+
+            with open(filename, "wb") as f: 
+                f.write(await audio_query.synthesis(speaker=speaker))
+        
+        await msg.edit(content="Synthesis complete, playing now")
+
+        vc = interaction.author.voice.channel
+        vc = await vc.connect()
+
+        vc.play(discord.FFmpegPCMAudio(filename))
+        
+        
+        while vc.is_playing():
+            await sleep(1)
+        
+        await vc.disconnect()
+        remove(filename)
 
 scheduler.start()
 

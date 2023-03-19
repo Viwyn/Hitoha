@@ -177,7 +177,7 @@ class Games(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="blackjack", aliases=['bj'], description="Start a game of blackjack", case_insensitive=True)
+    @commands.command(name="blackjack", aliases=['bj'], description="Start a game of blackjack")
     async def blackjack(self, interaction: discord.Interaction, bet: int):
         if bet < 1:
             return await interaction.reply("Unable to bet nothing")

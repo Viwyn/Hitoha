@@ -8,7 +8,7 @@ class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="balance", aliases=["bal"], description="Shows the balance of the user", case_insensitive=True)
+    @commands.command(name="balance", aliases=["bal"], description="Shows the balance of the user")
     async def balance(self, interaction: discord.Interaction, user: discord.User = None):
         if user == None:
             user = interaction.author
@@ -43,7 +43,7 @@ class Economy(commands.Cog):
                 cursor.close()
                 connection.close()
 
-    @commands.command(name="addbalance", aliases=["addbal"], description="Adds a user's balance", hidden=True, case_insensitive=True)
+    @commands.command(name="addbalance", aliases=["addbal"], description="Adds a user's balance", hidden=True)
     @commands.is_owner()
     async def addbalance(self, interaction: discord.Interaction, user: discord.User, amount:int):
         if user == None:
@@ -83,7 +83,7 @@ class Economy(commands.Cog):
                 cursor.close()
                 connection.close()
 
-    @commands.command(name="setbalance", aliases=["setbal"], description="Setss a user's balance", hidden=True, case_insensitive=True)
+    @commands.command(name="setbalance", aliases=["setbal"], description="Setss a user's balance", hidden=True)
     @commands.is_owner()
     async def setbalance(self, interaction: discord.Interaction, user: discord.User, amount:int):
         if user == None:
