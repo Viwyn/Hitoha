@@ -139,7 +139,7 @@ class Misc(commands.Cog):
     @commands.command(name="speaker", hidden=True)
     @commands.is_owner()
     async def speaker(self, interaction: discord.Interaction):
-        await interaction.delete_original_response()
+        await interaction.message.delete()
 
         vc = interaction.author.voice.channel
 
