@@ -15,7 +15,7 @@ scheduler = AsyncIOScheduler()
 class Misc(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.ffmpeg_options = {"before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5", "options": "-vn"}
+        self.ffmpeg_options = {"options": "-vn"}
 
     @commands.command(name="choose", description="Allow me to make a choice for you")
     async def choose(self, interaction: discord.Interaction, *choices):
