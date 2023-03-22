@@ -15,6 +15,7 @@ scheduler = AsyncIOScheduler()
 class Misc(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.ffmpeg_options = {"before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5", "options": "-vn"}
 
     @commands.command(name="choose", description="Allow me to make a choice for you")
     async def choose(self, interaction: discord.Interaction, *choices):
@@ -128,7 +129,7 @@ class Misc(commands.Cog):
         
         await msg.edit(content="Synthesis complete, playing now")
 
-        vc.play(discord.FFmpegPCMAudio(filename))
+        vc.play(discord.FFmpegPCMAudio(filename, **self.ffmpeg_options))
         
         while vc.is_playing():
             await asyncio.sleep(1)
@@ -175,7 +176,7 @@ class Misc(commands.Cog):
                     f.write(await audio_query.synthesis(speaker=2))
 
             conn.send("Synthesis complete!".encode())
-            vc.play(discord.FFmpegPCMAudio(filename))
+            vc.play(discord.FFmpegPCMAudio(filename, **self.ffmpeg_options))
 
 
         conn.close()
