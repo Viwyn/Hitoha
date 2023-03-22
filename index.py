@@ -14,8 +14,6 @@ openai.api_key=getenv("OPENAI")
 
 bot = commands.Bot(command_prefix='!!', intents=intents, case_insensitive=True)
 
-owner_id = 241138170610188288
-
 @bot.event
 async def on_ready():
     print("Ready!")

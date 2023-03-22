@@ -7,7 +7,8 @@ from time import mktime
 from voicevox import Client
 from typing import Optional
 from os import getenv, remove
-from asyncio import sleep
+import asyncio
+import socket
 
 scheduler = AsyncIOScheduler()
 
@@ -105,6 +106,14 @@ class Misc(commands.Cog):
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def speak(self, interaction: discord.Interaction, speaker: Optional[int] = 2, *text):
         msg = await interaction.reply("Processing...")
+
+        vc = interaction.author.voice.channel
+
+        try:
+            vc = await vc.connect()
+        except discord.ClientException:
+            return await interaction.send("I am already connected to a voice channel in this server.")
+
         async with Client(base_url=getenv('VM')) as client: 
             if len(text) <= 0:
                 return await interaction.reply("no text given")
@@ -119,17 +128,60 @@ class Misc(commands.Cog):
         
         await msg.edit(content="Synthesis complete, playing now")
 
-        vc = interaction.author.voice.channel
-        vc = await vc.connect()
-
         vc.play(discord.FFmpegPCMAudio(filename))
         
-        
         while vc.is_playing():
-            await sleep(1)
+            await asyncio.sleep(1)
         
         await vc.disconnect()
         remove(filename)
+
+    @commands.command(name="speaker", hidden=True)
+    @commands.is_owner()
+    async def speaker(self, interaction: discord.Interaction):
+        await interaction.delete_original_response()
+
+        vc = interaction.author.voice.channel
+
+        if interaction.guild.voice_client:
+            await interaction.guild.voice_client.disconnect()
+
+        vc = await vc.connect()
+
+        host = "0.0.0.0"
+        port = 8025
+
+        server_socket = socket.socket() 
+        server_socket.bind((host, port)) 
+
+        server_socket.listen(2)
+        conn, address = server_socket.accept()
+
+        print("Connection from: " + str(address))
+        while True:
+            data = conn.recv(1024).decode()
+
+            if not data:
+                break
+
+            print("Processing: " + str(data))
+            conn.send("Processing...".encode())
+            
+            async with Client(base_url=getenv('VM')) as client: 
+                audio_query = await client.create_audio_query(text=str(data), speaker=2) 
+                filename = f"{interaction.author.id}.wav"
+
+                with open(filename, "wb") as f: 
+                    f.write(await audio_query.synthesis(speaker=2))
+
+            conn.send("Synthesis complete!".encode())
+            vc.play(discord.FFmpegPCMAudio(filename))
+
+
+        conn.close()
+        await vc.disconnect()
+        remove(filename)
+
 
 scheduler.start()
 
