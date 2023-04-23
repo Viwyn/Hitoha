@@ -5,5 +5,5 @@ git+https://github.com/ytdl-org/youtube-dl.git@master#egg=youtube_dl
 PyNaCl==1.5.0
 mysql-connector-python==8.0.32
 APScheduler==3.10.1
-voicevox-client==0.1.5
+azure-cognitiveservices-speech==1.27.0
 ffmpeg==1.4
