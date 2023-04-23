@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from youtube_dl import YoutubeDL
 from random import shuffle
+import asyncio
 
 class Music(commands.Cog):
     def __init__(self, bot):
@@ -18,13 +19,51 @@ class Music(commands.Cog):
         await interaction.send(f"Searching for \"{search}\"")
         with YoutubeDL(self.ytdl_options) as ytdl:
             try:
-                info = ytdl.extract_info(f"ytsearch:{search}", download= False)['entries'][0]
+                info = ytdl.extract_info(f"ytsearch5:{search}", download= False)['entries']
             except Exception as e:
                 print(e)
                 return False
             
-        print(f"Found: {info['title']}")
+        videos = []
+
+        for video in info[:5]:
+            videos.append({"source": video['formats'][0]["url"], "title": video["title"]})
+
+        return videos
+
+    async def yt_search_url(self, search, interaction: discord.Interaction):
+        print(f"Searching: {search} ({interaction.author.display_name})")
+        await interaction.send(f"Searching for \"{search}\"")
+        with YoutubeDL(self.ytdl_options) as ytdl:
+            try:
+                info = ytdl.extract_info(search, download= False)
+            except Exception as e:
+                print(e)
+                return False
+            
+        print(f"Found: {info}")
         return {"source": info['formats'][0]["url"], "title": info["title"]}
+    
+    async def yt_search_playlist(self, plsearch, interaction: discord.Interaction):
+        print(f"Searching for playlist: {plsearch} ({interaction.author.display_name})")
+        await interaction.send(f"Searching for \"{plsearch}\"")
+        with YoutubeDL(self.ytdl_options) as ytdl:
+            try:
+                info = ytdl.extract_info(plsearch, download= False)
+            except Exception as e:
+                print(e)
+                return False
+            
+        print(f"Found: {len(info['entries'])} videos.")
+
+        videos = []
+
+        for entry in info['entries']:
+            print(f"Added {entry['title']} to queue ({interaction.author.display_name})")
+            videos.append({"source": entry['formats'][0]["url"], "title": entry["title"]})
+
+        return videos
+        # return {"source": info['formats'][0]["url"], "title": info["title"]}
     
     async def next_song(self, guild: int):
         if self.queue_data[guild]["looping"]:
@@ -73,6 +112,11 @@ class Music(commands.Cog):
         search_query = " ".join(search)
         guild = interaction.guild.id
 
+        if search_query.startswith("https:") or search_query.startswith("http:"):
+            pass
+        else:
+            return await interaction.send("Not a URL use search instead")
+
         vc = interaction.author.voice
         if vc is None:
             await interaction.reply("Connect to a voice channel first")
@@ -84,16 +128,61 @@ class Music(commands.Cog):
             else:
                 self.queue_data[guild] = {"queue": [], "channel": await vc.connect(), "looping": False, "is_playing": False, "is_paused": False}
 
-            
-            song = await self.yt_search(search_query, interaction)
+            song = False
+            if any(ss in search_query for ss in ['list', 'playlist']):
+                song = await self.yt_search_playlist(search_query, interaction)
+            else:
+                song = await self.yt_search_url(search_query, interaction) 
+
             if song == False:
                 await interaction.reply("Could not get the song, try a different search")
             else:
+                self.queue_data[guild]["queue"].extend(song)
+                if type(song) == list:
+                    await interaction.send(f"Added {len(song)} songs from the playlist to queue")
+                else:
+                    await interaction.send(f"Added song {song['title']} to position {len(self.queue_data[interaction.guild.id]['queue'])}")
+
+                if self.queue_data[guild]["is_playing"] == False:
+                    await self.play_song(interaction)
+
+    @commands.command(name="search", aliases=['s'], description="Searches for a song on Youtube")
+    async def search(self, interaction: discord.Interaction, *search):
+        search_query = " ".join(search)
+        guild = interaction.guild.id
+
+        vc = interaction.author.voice
+        if vc is None:
+            await interaction.reply("Connect to a voice channel first")
+        else:
+            vc = vc.channel
+
+            if guild in self.queue_data:
+                pass
+            else:
+                self.queue_data[guild] = {"queue": [], "channel": await vc.connect(), "looping": False, "is_playing": False, "is_paused": False}
+
+            def check(m):
+                return m.author == interaction.author and (m.content in ['1', '2', '3', '4', '5'])
+
+            songs = await self.yt_search(search_query, interaction)
+            
+            text = ""
+            for no, song in enumerate(songs):
+                text += f"{no+1}) {song['title']}\n"
+
+            msg = await interaction.reply(text)
+
+            try:
+                response = await self.bot.wait_for('message', timeout=30.0, check=check)
+                song = songs[int(response.content)-1]
                 self.queue_data[guild]["queue"].append(song)
                 await interaction.send(f"Added song {song['title']} to position {len(self.queue_data[interaction.guild.id]['queue'])}")
 
                 if self.queue_data[guild]["is_playing"] == False:
                     await self.play_song(interaction)
+            except asyncio.TimeoutError:
+                return await interaction.send("You did not pick a video.")
 
     @commands.command(name="pause", description="Pauses the currently playing song")
     async def pause(self, interaction: discord.Interaction):

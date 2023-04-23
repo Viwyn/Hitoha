@@ -4,13 +4,21 @@ import random
 from datetime import datetime, timedelta
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from time import mktime
-from voicevox import Client
 from typing import Optional
 from os import getenv, remove
 import asyncio
-import socket
+import azure.cognitiveservices.speech as speechsdk
+
 
 scheduler = AsyncIOScheduler()
+
+speech_key = getenv("AZURE")
+service_region = "southeastasia"
+        
+speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
+
+speech_config.speech_synthesis_voice_name = "ja-JP-AoiNeural"
+
 
 class Misc(commands.Cog):
     def __init__(self, bot):
@@ -115,20 +123,20 @@ class Misc(commands.Cog):
         except discord.ClientException:
             return await interaction.send("I am already connected to a voice channel in this server.")
 
-        async with Client(base_url=getenv('VM')) as client: 
-            if len(text) <= 0:
-                return await interaction.reply("no text given")
-            
-            line = " ".join(text)
+        filename = str(interaction.author.id) + ".wav"
+        audio_config = speechsdk.audio.AudioOutputConfig(filename=filename)
 
-            audio_query = await client.create_audio_query(text=line, speaker=speaker) 
-            filename = f"{interaction.author.id}.wav"
+        speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
 
-            with open(filename, "wb") as f: 
-                f.write(await audio_query.synthesis(speaker=speaker))
+        result = speech_synthesizer.speak_text_async(" ".join(text)).get()
+        if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
+            await msg.edit(content="Synthesis complete, playing now")
+        elif result.reason == speechsdk.ResultReason.Canceled:
+            cancellation_details = result.cancellation_details
+            await interaction.reply("Speech synthesis canceled: {}".format(cancellation_details.reason))
+            if cancellation_details.reason == speechsdk.CancellationReason.Error:
+                await interaction.reply("Error details: {}".format(cancellation_details.error_details))
         
-        await msg.edit(content="Synthesis complete, playing now")
-
         vc.play(discord.FFmpegPCMAudio(filename, **self.ffmpeg_options))
         
         while vc.is_playing():
@@ -136,53 +144,6 @@ class Misc(commands.Cog):
         
         await vc.disconnect()
         remove(filename)
-
-    @commands.command(name="speaker", hidden=True)
-    @commands.is_owner()
-    async def speaker(self, interaction: discord.Interaction):
-        await interaction.message.delete()
-
-        vc = interaction.author.voice.channel
-
-        if interaction.guild.voice_client:
-            await interaction.guild.voice_client.disconnect()
-
-        vc = await vc.connect()
-
-        host = "0.0.0.0"
-        port = 8025
-
-        server_socket = socket.socket() 
-        server_socket.bind((host, port)) 
-
-        server_socket.listen(2)
-        conn, address = server_socket.accept()
-
-        print("Connection from: " + str(address))
-        while True:
-            data = conn.recv(1024).decode()
-
-            if not data:
-                break
-
-            print("Processing: " + str(data))
-            conn.send("Processing...".encode())
-            
-            async with Client(base_url=getenv('VM')) as client: 
-                audio_query = await client.create_audio_query(text=str(data), speaker=2) 
-                filename = f"{interaction.author.id}.wav"
-
-                with open(filename, "wb") as f: 
-                    f.write(await audio_query.synthesis(speaker=2))
-
-            conn.send("Synthesis complete!".encode())
-            vc.play(discord.FFmpegPCMAudio(filename, **self.ffmpeg_options))
-
-
-        conn.close()
-        await vc.disconnect()
-        remove(filename)
-
 
 scheduler.start()
 
