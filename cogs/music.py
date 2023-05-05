@@ -41,8 +41,8 @@ class Music(commands.Cog):
                 print(e)
                 return False
             
-        print(f"Found: {info}")
-        return {"source": info['formats'][0]["url"], "title": info["title"]}
+        print(f"Found: {info['title']}")
+        return dict({"source": info['formats'][0]["url"], "title": info["title"]})
     
     async def yt_search_playlist(self, plsearch, interaction: discord.Interaction):
         print(f"Searching for playlist: {plsearch} ({interaction.author.display_name})")
@@ -90,7 +90,7 @@ class Music(commands.Cog):
             song = self.queue_data[interaction.guild.id]["queue"][0]['source']
 
             if self.queue_data[interaction.guild.id]["channel"] == None or not self.queue_data[interaction.guild.id]["channel"].is_connected():
-                await self.queue_data[interaction.guild.id]["channel"].connect()
+                await self.queue_data[interaction.guild.id]["channel"].connect(timeout=60.0, reconnect=True)
                 
                 if self.queue_data[interaction.guild.id]["channel"] == None:
                     await interaction.send("Could not join the voice channel")
@@ -126,7 +126,7 @@ class Music(commands.Cog):
             if guild in self.queue_data:
                 pass
             else:
-                self.queue_data[guild] = {"queue": [], "channel": await vc.connect(), "looping": False, "is_playing": False, "is_paused": False}
+                self.queue_data[guild] = {"queue": [], "channel": await vc.connect(timeout=60.0, reconnect=True), "looping": False, "is_playing": False, "is_paused": False}
 
             song = False
             if any(ss in search_query for ss in ['list', 'playlist']):
@@ -137,10 +137,11 @@ class Music(commands.Cog):
             if song == False:
                 await interaction.reply("Could not get the song, try a different search")
             else:
-                self.queue_data[guild]["queue"].extend(song)
                 if type(song) == list:
+                    self.queue_data[guild]["queue"].extend(song)
                     await interaction.send(f"Added {len(song)} songs from the playlist to queue")
                 else:
+                    self.queue_data[guild]["queue"].append(song)
                     await interaction.send(f"Added song {song['title']} to position {len(self.queue_data[interaction.guild.id]['queue'])}")
 
                 if self.queue_data[guild]["is_playing"] == False:
@@ -160,7 +161,7 @@ class Music(commands.Cog):
             if guild in self.queue_data:
                 pass
             else:
-                self.queue_data[guild] = {"queue": [], "channel": await vc.connect(), "looping": False, "is_playing": False, "is_paused": False}
+                self.queue_data[guild] = {"queue": [], "channel": await vc.connect(timeout=60.0, reconnect=True), "looping": False, "is_playing": False, "is_paused": False}
 
             def check(m):
                 return m.author == interaction.author and (m.content in ['1', '2', '3', '4', '5'])
