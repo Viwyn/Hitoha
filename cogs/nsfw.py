@@ -21,7 +21,12 @@ class NSFW(commands.Cog):
         payload = {"limit": 30, "tags": " ".join(tags), "json": 1}
 
         response = requests.get(url, params=payload)
-        print(response.url)
+
+        try:
+            response.json()
+        except requests.JSONDecodeError as e:
+            return await ctx.reply("There was an error with the search, try again with different tags")
+
 
         for post in random.sample(response.json(), count):
             tags = list("`" + tag + "`" for tag in post["tags"].split(" "))
