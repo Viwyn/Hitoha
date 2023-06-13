@@ -6,14 +6,14 @@ class Ping(commands.Cog):
         self.bot = bot
 
     @commands.command(name="ping", description="Pings me")
-    async def ping(self, interaction: discord.Interaction):
+    async def ping(self, ctx):
         lag = round(self.bot.latency * 1000)
-        await interaction.send(f"Pong! \nLatency: {lag}ms")
+        await ctx.send(f"Pong! \nLatency: {lag}ms")
 
     @commands.command(name="pong", description="Pings me")
-    async def pong(self, interaction: discord.Interaction):
+    async def pong(self, ctx):
         lag = round(self.bot.latency * 1000)
-        await interaction.send(f"Ping! \nLatency: {lag}ms")
+        await ctx.send(f"Ping! \nLatency: {lag}ms")
         
 async def setup(bot):
     await bot.add_cog(Ping(bot))

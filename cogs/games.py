@@ -73,7 +73,7 @@ class tttButton(Button):
         self.x = x
         self.y = y
 
-    async def callback(self, interaction):
+    async def callback(self, ctx):
         view:tttView = self.view
         content = ""
 
@@ -82,7 +82,7 @@ class tttButton(Button):
         if state in (-1, 1):
             return
 
-        if (interaction.user == view.current and interaction.user == view.player1):
+        if (ctx.user == view.current and ctx.user == view.player1):
             self.style = discord.ButtonStyle.success
             self.label = "X"
             view.current = view.player2
@@ -90,7 +90,7 @@ class tttButton(Button):
             content = f"TicTacToe Match between {view.player1.display_name} and {view.player2.display_name}\nCurrent Player: {view.player2.mention}(O)"
             self.disabled = True
 
-        elif (interaction.user == view.current and interaction.user == view.player2):
+        elif (ctx.user == view.current and ctx.user == view.player2):
             self.style = discord.ButtonStyle.danger
             self.label = "O"
             view.current = view.player1
@@ -115,7 +115,7 @@ class tttButton(Button):
 
             view.stop()
 
-        await interaction.response.edit_message(content=content, view=view)
+        await ctx.response.edit_message(content=content, view=view)
 
 class tttView(View):
     def __init__(self, p1:discord.User, p2:discord.User):
@@ -178,9 +178,9 @@ class Games(commands.Cog):
         self.bot = bot
 
     @commands.command(name="blackjack", aliases=['bj'], description="Start a game of blackjack")
-    async def blackjack(self, interaction: discord.Interaction, bet: int):
+    async def blackjack(self, ctx, bet: int):
         if bet < 1:
-            return await interaction.reply("Unable to bet nothing")
+            return await ctx.reply("Unable to bet nothing")
 
         connection = mysql.connector.connect(host=getenv("DBHOST"),
                                                 port=getenv("DBPORT"),
@@ -189,14 +189,14 @@ class Games(commands.Cog):
                                                 password=getenv("DBPW"))
         cursor = connection.cursor()
 
-        cursor.execute(f"SELECT balance FROM Users WHERE id = {interaction.author.id}")
+        cursor.execute(f"SELECT balance FROM Users WHERE id = {ctx.author.id}")
         bal = cursor.fetchone()
 
         if bal == None:
-            return await interaction.reply("You have not made an account yet, run bal to create your account")
+            return await ctx.reply("You have not made an account yet, run bal to create your account")
         
         if bal[0] < bet:
-            return await interaction.reply("You have insufficent balance")
+            return await ctx.reply("You have insufficent balance")
 
         d1: Deck = Deck()
         player: Hand = Hand()
@@ -211,10 +211,10 @@ class Games(commands.Cog):
         stood = False
         state = None
 
-        message = await interaction.send("Starting a game of blackjack...")
+        message = await ctx.send("Starting a game of blackjack...")
 
         def check(m):
-            return m.author == interaction.author and m.channel == interaction.channel and m.content.lower().strip() in ['hit', 'stand', 'h', 's']
+            return m.author == ctx.author and m.channel == ctx.channel and m.content.lower().strip() in ['hit', 'stand', 'h', 's']
 
         while True:
             msg = "```\n"
@@ -223,7 +223,7 @@ class Games(commands.Cog):
             else:
                 msg += "Dealer:\n" + " ".join(list(x.show() for x in dealer.hand)) + f" ({dealer.value})\n\n" 
                 
-            msg += f"{interaction.author.display_name}:\n" + " ".join(list(x.show() for x in player.hand)) + f" ({player.value})"
+            msg += f"{ctx.author.display_name}:\n" + " ".join(list(x.show() for x in player.hand)) + f" ({player.value})"
 
             msg += "\n```"
             await message.edit(content=msg)
@@ -246,7 +246,7 @@ class Games(commands.Cog):
                         continue
 
                 except asyncio.TimeoutError:
-                    await interaction.send("*Game forfeited due to inactivity*")
+                    await ctx.send("*Game forfeited due to inactivity*")
                     break
             else:
                 if player.value > 21 and len(dealer.hand) > 2:
@@ -299,19 +299,19 @@ class Games(commands.Cog):
 
         msg = "```\n"
         msg += "Dealer:\n" + " ".join(list(x.show() for x in dealer.hand)) + f" ({dealer.value})\n\n" 
-        msg += f"{interaction.author.display_name}:\n" + " ".join(list(x.show() for x in player.hand)) + f" ({player.value})"
+        msg += f"{ctx.author.display_name}:\n" + " ".join(list(x.show() for x in player.hand)) + f" ({player.value})"
         msg += "\n```"
 
         if state == 'player':
-            msg += f'\n{interaction.author.display_name} Wins!'
+            msg += f'\n{ctx.author.display_name} Wins!'
             msg += f'\n+{bet}'
-            cursor.execute(f"UPDATE Users SET balance = {bal[0]+bet} WHERE id = {interaction.author.id}")
-            cursor.execute(f"UPDATE Users SET bjwin = bjwin + 1 WHERE id = {interaction.author.id}")
+            cursor.execute(f"UPDATE Users SET balance = {bal[0]+bet} WHERE id = {ctx.author.id}")
+            cursor.execute(f"UPDATE Users SET bjwin = bjwin + 1 WHERE id = {ctx.author.id}")
         elif state == 'dealer':
             msg += f'\nHitoha Wins!'
             msg += f'\n-{bet}'
-            cursor.execute(f"UPDATE Users SET balance = {bal[0]-bet} WHERE id = {interaction.author.id}")
-            cursor.execute(f"UPDATE Users SET bjloss = bjloss + 1 WHERE id = {interaction.author.id}")
+            cursor.execute(f"UPDATE Users SET balance = {bal[0]-bet} WHERE id = {ctx.author.id}")
+            cursor.execute(f"UPDATE Users SET bjloss = bjloss + 1 WHERE id = {ctx.author.id}")
         elif state == 'tie':
             msg += "\nGame ended in a tie!"
 
@@ -326,27 +326,27 @@ class Games(commands.Cog):
     description="Play a game of TicTacToe with someone.",
     case_insensitive=True
     )
-    async def tictactoe(self, interaction: discord.Interaction, opponent:discord.User = commands.parameter(description="The opponent for the match")):
+    async def tictactoe(self, ctx, opponent:discord.User = commands.parameter(description="The opponent for the match")):
 
-        if opponent == interaction.author:
-            return await interaction.send("Can't play TicTacToe with yourself, go find some friends.")
+        if opponent == ctx.author:
+            return await ctx.send("Can't play TicTacToe with yourself, go find some friends.")
 
         def check(m):
             return m.author == opponent and (m.content == 'y' or m.content == 'n')
 
-        await interaction.send(f"{opponent.mention}, do you want to play TicTacToe with {interaction.author.display_name}? (y/n)")
+        await ctx.send(f"{opponent.mention}, do you want to play TicTacToe with {ctx.author.display_name}? (y/n)")
 
         try:
             response = await self.bot.wait_for('message', timeout=20.0, check=check)
         except asyncio.TimeoutError:
-            return await interaction.send(f"{opponent.display_name} did not accept the match.")
+            return await ctx.send(f"{opponent.display_name} did not accept the match.")
 
         if response.content == 'n':
-            return await interaction.send(f"{opponent.display_name} did not accept the match.")
+            return await ctx.send(f"{opponent.display_name} did not accept the match.")
 
-        view = tttView(interaction.author, opponent)
+        view = tttView(ctx.author, opponent)
 
-        await interaction.send(content=f"TicTacToe Match between {interaction.author.display_name} and {opponent.display_name}\nCurrent Player: {interaction.author.mention}(X)", view=view)
+        await ctx.send(content=f"TicTacToe Match between {ctx.author.display_name} and {opponent.display_name}\nCurrent Player: {ctx.author.mention}(X)", view=view)
 
 async def setup(bot):
     await bot.add_cog(Games(bot))

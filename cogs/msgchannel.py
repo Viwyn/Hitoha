@@ -7,9 +7,9 @@ class MsgChannel(commands.Cog):
 
     @commands.command(case_insensitive=True)
     @commands.is_owner()
-    async def msgchannel(self, interaction: discord.Interaction, channelid:int, *words):
+    async def msgchannel(self, ctx, channelid:int, *words):
         if (len(words) == 0):
-            return await interaction.send("Cannot send empty message.")
+            return await ctx.send("Cannot send empty message.")
 
         channel = await self.bot.fetch_channel(channelid)
         await channel.send(" ".join(words))

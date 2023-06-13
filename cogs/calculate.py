@@ -6,12 +6,12 @@ class Calculate(commands.Cog):
         self.bot = bot
 
     @commands.command(name="calculate", aliases=['cal'], description="Calculate an equation")
-    async def calculate(self, interaction: discord.Interaction, *eq):
+    async def calculate(self, ctx, *eq):
         equation = " ".join(eq)
 
         equation = equation.replace("^", "**")
 
-        return await interaction.send(eval(equation))
+        return await ctx.send(eval(equation))
     
 async def setup(bot):
     await bot.add_cog(Calculate(bot))

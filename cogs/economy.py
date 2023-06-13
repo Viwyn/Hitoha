@@ -9,9 +9,9 @@ class Economy(commands.Cog):
         self.bot = bot
 
     @commands.command(name="balance", aliases=["bal"], description="Shows the balance of the user")
-    async def balance(self, interaction: discord.Interaction, user: discord.User = None):
+    async def balance(self, ctx, user: discord.User = None):
         if user == None:
-            user = interaction.author
+            user = ctx.author
 
         id = user.id
 
@@ -32,10 +32,10 @@ class Economy(commands.Cog):
                     cursor.execute(f"SELECT * FROM Users WHERE id = {id}")
                     record = cursor.fetchone()
 
-                await interaction.send(f"{user.display_name}'s balance: {record[1]}")
+                await ctx.send(f"{user.display_name}'s balance: {record[1]}")
 
         except Error as e:
-            await interaction.send(f"Error, {e}")
+            await ctx.send(f"Error, {e}")
 
         finally:
             if connection.is_connected():
@@ -45,9 +45,9 @@ class Economy(commands.Cog):
 
     @commands.command(name="addbalance", aliases=["addbal"], description="Adds a user's balance", hidden=True)
     @commands.is_owner()
-    async def addbalance(self, interaction: discord.Interaction, user: discord.User, amount:int):
+    async def addbalance(self, ctx, user: discord.User, amount:int):
         if user == None:
-            user = interaction.author
+            user = ctx.author
 
         id = user.id
 
@@ -72,10 +72,10 @@ class Economy(commands.Cog):
                 cursor.execute(f"SELECT balance FROM Users WHERE id = {id}")
                 ori += cursor.fetchone()[0]
                 cursor.execute(f"UPDATE Users SET balance = '{amount+ori}' WHERE `Users`.`id` = {id};")
-                await interaction.send(f"Added {amount} to {user.display_name}")
+                await ctx.send(f"Added {amount} to {user.display_name}")
 
         except Error as e:
-            await interaction.send(f"Error, {e}")
+            await ctx.send(f"Error, {e}")
 
         finally:
             if connection.is_connected():
@@ -85,9 +85,9 @@ class Economy(commands.Cog):
 
     @commands.command(name="setbalance", aliases=["setbal"], description="Setss a user's balance", hidden=True)
     @commands.is_owner()
-    async def setbalance(self, interaction: discord.Interaction, user: discord.User, amount:int):
+    async def setbalance(self, ctx, user: discord.User, amount:int):
         if user == None:
-            user = interaction.author
+            user = ctx.author
 
         id = user.id
 
@@ -109,10 +109,10 @@ class Economy(commands.Cog):
                 cursor.execute(f"SELECT balance FROM Users WHERE id = {id}")
                 ori += cursor.fetchone()[0]
                 cursor.execute(f"UPDATE Users SET balance = '{amount}' WHERE `Users`.`id` = {id};")
-                await interaction.send(f"Set {user.display_name}'s balance to {amount}")
+                await ctx.send(f"Set {user.display_name}'s balance to {amount}")
 
         except Error as e:
-            await interaction.send(f"Error, {e}")
+            await ctx.send(f"Error, {e}")
 
         finally:
             if connection.is_connected():

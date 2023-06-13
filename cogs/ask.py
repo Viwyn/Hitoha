@@ -8,11 +8,11 @@ class Ask(commands.Cog):
         self.bot = bot
 
     @commands.command(name="ask", description="Ask me a question")
-    async def ask(self, interaction: discord.Interaction, *, question = commands.parameter(description="The question that you want to ask me")):
+    async def ask(self, ctx, *, question = commands.parameter(description="The question that you want to ask me")):
         if question == "":
             question = "Hello"
 
-        async with interaction.channel.typing():
+        async with ctx.channel.typing():
             response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -25,17 +25,17 @@ class Ask(commands.Cog):
             length = len(parsed)
 
             if length > 2000:
-                print(f"Error, response for {interaction.author.display_name} went over the max limit ({length}). \nSending a txt file instead")
-                with open(f"{interaction.author.id}.txt", "a",encoding='utf-8') as file:
+                print(f"Error, response for {ctx.author.display_name} went over the max limit ({length}). \nSending a txt file instead")
+                with open(f"{ctx.author.id}.txt", "a",encoding='utf-8') as file:
                     file.write(parsed)
 
-                with open(f"{interaction.author.id}.txt", "rb") as file:
-                    await interaction.send(content=f"Sorry,the response went over the max character limit. \nSending a txt file instead", file=discord.File(file, filename="response.txt"))
+                with open(f"{ctx.author.id}.txt", "rb") as file:
+                    await ctx.send(content=f"Sorry,the response went over the max character limit. \nSending a txt file instead", file=discord.File(file, filename="response.txt"))
 
-                remove(f"{interaction.author.id}.txt")
+                remove(f"{ctx.author.id}.txt")
 
             else:
-                await interaction.reply(parsed)
+                await ctx.reply(parsed)
 
 async def setup(bot):
     await bot.add_cog(Ask(bot))

@@ -12,14 +12,14 @@ class Convo(commands.Cog):
         self.convo_data = {}
 
     @commands.command(name="convo", description="Start a conversation with me")
-    async def convo(self, interaction: discord.Interaction):
-        author = interaction.author.id
+    async def convo(self, ctx):
+        author = ctx.author.id
 
         if author in self.convo_data:
             del self.convo_data[author]
-            await interaction.send("Starting new conversation.")
+            await ctx.send("Starting new conversation.")
 
-        channel = interaction.channel.id
+        channel = ctx.channel.id
 
         convo_info = {"channel": channel, 
                     "history": [
@@ -35,7 +35,7 @@ class Convo(commands.Cog):
         
         while(True):
             try:
-                async with interaction.channel.typing():
+                async with ctx.channel.typing():
                     response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",
                     messages=  self.convo_data[author]["history"]
@@ -45,24 +45,24 @@ class Convo(commands.Cog):
                 length = len(parsed)
 
                 if length > 2000:
-                    print(f"Error, response for {interaction.author.display_name} went over the max limit ({length}). \nSending a txt file instead")
-                    with open(f"{interaction.author.id}.txt", "a",encoding='utf-8') as file:
+                    print(f"Error, response for {ctx.author.display_name} went over the max limit ({length}). \nSending a txt file instead")
+                    with open(f"{ctx.author.id}.txt", "a",encoding='utf-8') as file:
                         file.write(parsed)
 
-                    with open(f"{interaction.author.id}.txt", "rb") as file:
-                        await interaction.send(content=f"Sorry,the response went over the max character limit. \nSending a txt file instead", file=discord.File(file, filename="response.txt"))
+                    with open(f"{ctx.author.id}.txt", "rb") as file:
+                        await ctx.send(content=f"Sorry,the response went over the max character limit. \nSending a txt file instead", file=discord.File(file, filename="response.txt"))
                         self.convo_data[author]["history"].append({"role": "assistant", "content": parsed})
 
-                    remove(f"{interaction.author.id}.txt")
+                    remove(f"{ctx.author.id}.txt")
                 
                 else:
-                    await interaction.send(parsed)
+                    await ctx.send(parsed)
                     self.convo_data[author]["history"].append({"role": "assistant", "content": parsed})
 
                 response = await self.bot.wait_for('message', timeout=30.0, check=check)
 
                 if response.content == "!!end":
-                    await interaction.send("Ending conversation")
+                    await ctx.send("Ending conversation")
                     del self.convo_data[author]
                     break
 
@@ -70,13 +70,13 @@ class Convo(commands.Cog):
 
 
             except asyncio.TimeoutError:
-                await interaction.send("*Conversation ended due to inactivity*")
+                await ctx.send("*Conversation ended due to inactivity*")
                 del self.convo_data[author]
                 break
 
 
     @commands.command(name="end", hidden=True)
-    async def end(self, interaction: discord.Interaction):
+    async def end(self, ctx):
         pass
 
 async def setup(bot):

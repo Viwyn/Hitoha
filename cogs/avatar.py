@@ -9,26 +9,26 @@ class PfpView(View):
         self.embed0 = embed0
 
     @discord.ui.button(style=discord.ButtonStyle.primary, label="Personal Profile Picture", custom_id="personal", disabled=True)
-    async def button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def button_callback(self, ctx, button: discord.ui.Button):
         otherButton = [x for x in self.children if x.custom_id == "server"][0]
         if (otherButton.style == discord.ButtonStyle.success):
             otherButton.disabled = False
             button.disabled = True
             
-        await interaction.response.edit_message(embed = self.embed, view=self)
+        await ctx.response.edit_message(embed = self.embed, view=self)
 
     @discord.ui.button(style=discord.ButtonStyle.success, label="Server Profile Picture", custom_id="server")
-    async def server_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def server_button_callback(self, ctx, button: discord.ui.Button):
         if (self.embed0 == None):
             button.label = "Not Found"
             button.style = discord.ButtonStyle.danger
             button.disabled = True
-            await interaction.response.edit_message(view=self)
+            await ctx.response.edit_message(view=self)
         else:
             otherButton = [x for x in self.children if x.custom_id == "personal"][0]
             otherButton.disabled = False
             button.disabled = True
-            await interaction.response.edit_message(embed = self.embed0, view=self)
+            await ctx.response.edit_message(embed = self.embed0, view=self)
 
     async def on_timeout(self):
         for child in self.children:
@@ -46,10 +46,10 @@ class Avatar(commands.Cog):
     description="Gets the profile picture of the user, defaults to author if no user is specified.", 
     brief="Gets a profile picture.",
     case_insensitive=True)
-    async def pfp(self, interaction: discord.Interaction, user:discord.User = None):
+    async def pfp(self, ctx, user:discord.User = None):
     
         if user == None:
-            user = interaction.author
+            user = ctx.author
     
         name = user.display_name
     
@@ -58,7 +58,7 @@ class Avatar(commands.Cog):
         else:
             embed = discord.Embed(title = f"Showing avatar for __{name}__", color=discord.Color.random())
     
-        embed.set_footer(text= f"Requested by {interaction.author.display_name}", icon_url=interaction.author.display_avatar.url)
+        embed.set_footer(text= f"Requested by {ctx.author.display_name}", icon_url=ctx.author.display_avatar.url)
     
         embed0 = embed.copy()
     
@@ -68,7 +68,7 @@ class Avatar(commands.Cog):
             embed.set_image(url=user.default_avatar.url)
     
         
-        member = await interaction.guild.fetch_member(user.id)
+        member = await ctx.guild.fetch_member(user.id)
     
         if member.guild_avatar != None:
             embed0.set_image(url=member.guild_avatar.url)
@@ -77,7 +77,7 @@ class Avatar(commands.Cog):
     
         view = PfpView(embed=embed, embed0=embed0)
     
-        await interaction.send(embed=embed, view=view)
+        await ctx.send(embed=embed, view=view)
 
 async def setup(bot):
     await bot.add_cog(Avatar(bot))

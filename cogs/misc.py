@@ -26,11 +26,11 @@ class Misc(commands.Cog):
         self.ffmpeg_options = {"options": "-vn"}
 
     @commands.command(name="choose", description="Allow me to make a choice for you")
-    async def choose(self, interaction: discord.Interaction, *choices):
-        await interaction.reply(random.choice(choices))
+    async def choose(self, ctx, *choices):
+        await ctx.reply(random.choice(choices))
 
     @commands.command(name="8ball", description="Roll the magic 8ball")
-    async def _8ball(self, interaction:discord.Interaction, *args):
+    async def _8ball(self, ctx, *args):
         outputs = [
             "It is certain",
             "Without a doubt",
@@ -85,10 +85,10 @@ class Misc(commands.Cog):
             "I need more information"
             ]
         
-        await interaction.reply(random.choice(outputs))
+        await ctx.reply(random.choice(outputs))
     
     @commands.command(name="remind", aliases=['remindme', 'reminder'], description="Send a reminder to you at a spefied time")
-    async def remind(self, interaction: discord.Interaction, time: str = commands.parameter(description="Time in minutes(m), hours(h), day(d)"), *message):
+    async def remind(self, ctx, time: str = commands.parameter(description="Time in minutes(m), hours(h), day(d)"), *message):
 
         if time.lower().endswith("min"):
             stripped = time.replace("min", "")
@@ -100,30 +100,30 @@ class Misc(commands.Cog):
             stripped = time.replace("d", "")
             delay = timedelta(days=float(stripped))
         else:
-            return await interaction.send("No correct time format given")
+            return await ctx.send("No correct time format given")
 
         when = datetime.now() + delay
         reminder = " ".join(message)
 
-        scheduler.add_job(func=self.sendreminder, trigger="date", run_date=when, args=[interaction, reminder])
-        await interaction.send(f"I will remind you at <t:{int(mktime(when.timetuple()))}:d><t:{int(mktime(when.timetuple()))}:T> (<t:{int(mktime(when.timetuple()))}:R>)")
+        scheduler.add_job(func=self.sendreminder, trigger="date", run_date=when, args=[ctx, reminder])
+        await ctx.send(f"I will remind you at <t:{int(mktime(when.timetuple()))}:d><t:{int(mktime(when.timetuple()))}:T> (<t:{int(mktime(when.timetuple()))}:R>)")
 
-    async def sendreminder(self, interaction, reminder):
-        await interaction.reply(f"Reminder for:\n{reminder}")
+    async def sendreminder(self, ctx, reminder):
+        await ctx.reply(f"Reminder for:\n{reminder}")
 
     @commands.command(name="speak", aliases=['speach', 'say', 'talk'], description="Speak Japanese into VC")
     @commands.cooldown(1, 10, commands.BucketType.user)
-    async def speak(self, interaction: discord.Interaction, speaker: Optional[int] = 2, *text):
-        msg = await interaction.reply("Processing...")
+    async def speak(self, ctx, speaker: Optional[int] = 2, *text):
+        msg = await ctx.reply("Processing...")
 
-        vc = interaction.author.voice.channel
+        vc = ctx.author.voice.channel
 
         try:
             vc = await vc.connect()
         except discord.ClientException:
-            return await interaction.send("I am already connected to a voice channel in this server.")
+            return await ctx.send("I am already connected to a voice channel in this server.")
 
-        filename = str(interaction.author.id) + ".wav"
+        filename = str(ctx.author.id) + ".wav"
         audio_config = speechsdk.audio.AudioOutputConfig(filename=filename)
 
         speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
@@ -133,9 +133,9 @@ class Misc(commands.Cog):
             await msg.edit(content="Synthesis complete, playing now")
         elif result.reason == speechsdk.ResultReason.Canceled:
             cancellation_details = result.cancellation_details
-            await interaction.reply("Speech synthesis canceled: {}".format(cancellation_details.reason))
+            await ctx.reply("Speech synthesis canceled: {}".format(cancellation_details.reason))
             if cancellation_details.reason == speechsdk.CancellationReason.Error:
-                await interaction.reply("Error details: {}".format(cancellation_details.error_details))
+                await ctx.reply("Error details: {}".format(cancellation_details.error_details))
         
         vc.play(discord.FFmpegPCMAudio(filename, **self.ffmpeg_options))
         

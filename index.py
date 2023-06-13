@@ -26,6 +26,11 @@ async def load():
 @bot.event
 async def on_command_error(ctx, error):
     await ctx.reply(error)
+    print(f"{ctx.author.display_name}: {error}")
+
+@bot.event
+async def on_error(e):
+    print(e)
 
 async def main():
     async with bot:
