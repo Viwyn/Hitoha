@@ -4,6 +4,7 @@ import requests
 import random
 import typing
 from os import getenv
+from requests import JSONDecodeError
 
 class Image(commands.Cog):
     def __init__(self, bot):
@@ -25,7 +26,7 @@ class Image(commands.Cog):
 
         try:
             response.json()
-        except requests.JSONDecodeError as e:
+        except JSONDecodeError as e:
             return await ctx.reply("There was an error with the search, try again with different tags")
 
         for post in random.sample(response.json(), count):
