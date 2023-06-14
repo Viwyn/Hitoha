@@ -9,7 +9,7 @@ class Image(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="Rule34", description="Gets a Rule34 image")
+    @commands.command(name="rule34", description="Gets a Rule34 image", aliases=['r34'])
     async def rule34(self, ctx, count: typing.Optional[int] = 1, *tags):
         if "18+" not in list(role.name for role in ctx.author.roles) and ctx.author.id != 241138170610188288:
             return await ctx.send("You do not have the 18+ role.")
@@ -28,7 +28,6 @@ class Image(commands.Cog):
         except requests.JSONDecodeError as e:
             return await ctx.reply("There was an error with the search, try again with different tags")
 
-
         for post in random.sample(response.json(), count):
             tags = list("`" + tag + "`" for tag in post["tags"].split(" "))
 
@@ -46,7 +45,7 @@ class Image(commands.Cog):
 
             await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(name="sauce", description="Gets the source material for the image", aliases=["source"])
     async def sauce(self, ctx, imgurl: typing.Optional[str] = None, similarityreq: typing.Optional[int] = 75):
         if imgurl == None and len(ctx.message.attachments) == 0:
             return await ctx.send("Please provide a link or an attachment")
