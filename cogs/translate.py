@@ -61,7 +61,7 @@ class Translate(commands.Cog):
 
             embed = discord.Embed(title=f"__{self.getLangName(ori_lang, lang)} → {self.getLangName(lang, lang)}__", 
                                 color=discord.Color.random(),
-                                description=f"### {translation}")
+                                description=f"{translation}")
 
             embed.set_author(icon_url="https://connectoricons-prod.azureedge.net/releases/v1.0.1623/1.0.1623.3210/microsofttranslator/icon.png",
                             name="Translator")
