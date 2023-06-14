@@ -53,7 +53,11 @@ class Translate(commands.Cog):
         elif reaction.emoji == "🇷🇺":
             lang = "ru"
 
-        if lang:
+        if lang and not user.bot:
+            reacted = [user async for user in reaction.users()]
+            if self.bot.user in reacted:
+                return
+            await reaction.message.add_reaction(reaction.emoji)
             response = self.translate(reaction.message.content, lang)
 
             ori_lang = response[0]['detectedLanguage']['language']
