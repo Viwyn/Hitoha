@@ -29,8 +29,10 @@ async def on_command_error(ctx, error):
     print(f"{ctx.author.display_name}: {error}")
 
 @bot.event
-async def on_error(e):
+async def on_error(e, *args, **kwargs):
     print(e)
+    print(args)
+    print(kwargs)
 
 async def main():
     async with bot:
