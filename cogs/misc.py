@@ -25,6 +25,8 @@ class Misc(commands.Cog):
         self.bot = bot
         self.ffmpeg_options = {"options": "-vn"}
 
+        self.deletedMessages = {}
+
     @commands.command(name="choose", description="Allow me to make a choice for you")
     async def choose(self, ctx, *choices):
         await ctx.reply(random.choice(choices))
@@ -144,6 +146,82 @@ class Misc(commands.Cog):
         
         await vc.disconnect()
         remove(filename)
+
+    @commands.command(name="calculate", aliases=['cal'], description="Calculate an equation")
+    async def calculate(self, ctx, *eq):
+        equation = " ".join(eq)
+
+        equation = equation.replace("^", "**")
+
+        return await ctx.send(eval(equation))
+
+    @commands.command(case_insensitive=True, hidden=True)
+    @commands.is_owner()
+    async def msgchannel(self, ctx, channelid:int, *words):
+        if (len(words) == 0):
+            return await ctx.send("Cannot send empty message.")
+
+        channel = await self.bot.fetch_channel(channelid)
+        await channel.send(" ".join(words))
+
+    @commands.command(aliases=['cc'], hidden=True)
+    @commands.is_owner()
+    async def connectchannel(self, ctx, channelid:int):
+        targetChannel = await self.bot.fetch_channel(channelid)
+        homeChannel = ctx.channel
+
+        def check(m):
+            return (m.channel == targetChannel or m.channel == homeChannel) and m.author != self.bot.user
+
+        await homeChannel.send(f"Started connection with the channel \"{targetChannel.name}\" in the server \"{targetChannel.guild.name}\"")
+
+        while(True):
+            response = await self.bot.wait_for('message', timeout=None, check=check)
+
+            if response.channel == homeChannel and response.content == "end":
+                await homeChannel.send("Ended connection.")
+                break
+            elif response.channel == homeChannel:
+                attList = []
+                if response.attachments:
+                    for attachment in response.attachments:
+                        attList.append(discord.File(io.BytesIO(await attachment.read()), f'file.{attachment.content_type.split("/")[1]}'))
+                    await targetChannel.send(response.content, files=attList)
+                else:
+                    await targetChannel.send(response.content)
+
+            elif response.channel == targetChannel:
+                await homeChannel.send(f"{response.author.display_name}: {response.content}")
+
+    @commands.Cog.listener()
+    async def on_message_delete(self, msg):
+        channelId = msg.channel.id
+
+        self.deletedMessages[channelId] = msg
+
+    @commands.command(name="snipe", description="Gets the most recently deleted message")
+    async def snipe(self, ctx):
+        if ctx.channel.id in self.deletedMessages:
+            message = self.deletedMessages[ctx.channel.id]
+
+            embed = discord.Embed(title="Deleted Message", 
+                                color=discord.Color.random())
+            
+            embed.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
+
+            embed.add_field(name="__Message Content__", value=message.content, inline=False)
+            embed.add_field(name="__Time sent__", value=f"<t:{int(message.created_at.timestamp())}:f>")
+            
+            if message.attachments: #checking for attachments
+                embed.add_field(name=f"__Attachments ({len(message.attachments)})__", value="\n".join(list("[" + attachment.filename + "](" + attachment.url + ")" for attachment in message.attachments)))
+                if message.attachments[0].filename.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif')):
+                    embed.set_thumbnail(url=message.attachments[0].url)
+
+            embed.set_footer(text=f"Requested by {ctx.author.display_name}", icon_url=ctx.author.display_avatar)
+
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send("No deleted messages")
 
 scheduler.start()
 

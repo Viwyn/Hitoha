@@ -37,7 +37,7 @@ class PfpView(View):
 
     #button0 = discord.ui.Button(style=discord.ButtonStyle.success, label="Server Profile Picture", custom_id="pfpbutton0")
 
-class Avatar(commands.Cog):
+class Profile(commands.Cog):
     def __init__(self, bot) -> None:
         self.bot = bot
 
@@ -80,4 +80,4 @@ class Avatar(commands.Cog):
         await ctx.send(embed=embed, view=view)
 
 async def setup(bot):
-    await bot.add_cog(Avatar(bot))
+    await bot.add_cog(Profile(bot))

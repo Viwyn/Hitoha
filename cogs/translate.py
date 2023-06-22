@@ -45,7 +45,7 @@ class Translate(commands.Cog):
         elif reaction.emoji == "🇰🇷":
             lang = "ko"
         elif reaction.emoji == "🇮🇩":
-            lang = "in"
+            lang = "id"
         elif reaction.emoji == "🇨🇳":
             lang = "zh"
         elif reaction.emoji == "🇩🇪":
@@ -57,7 +57,6 @@ class Translate(commands.Cog):
             reacted = [user async for user in reaction.users()]
             if self.bot.user in reacted:
                 return
-            await reaction.message.add_reaction(reaction.emoji)
             response = self.translate(reaction.message.content, lang)
 
             ori_lang = response[0]['detectedLanguage']['language']
@@ -72,6 +71,7 @@ class Translate(commands.Cog):
             
             embed.set_footer(text=f"Requested by {user.display_name}", icon_url=user.display_avatar)
 
+            await reaction.message.add_reaction(reaction.emoji)
             await reaction.message.reply(embed=embed, mention_author=False)
 
 async def setup(bot):

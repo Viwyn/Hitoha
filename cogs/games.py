@@ -182,22 +182,6 @@ class Games(commands.Cog):
         if bet < 1:
             return await ctx.reply("Unable to bet nothing")
 
-        connection = mysql.connector.connect(host=getenv("DBHOST"),
-                                                port=getenv("DBPORT"),
-                                                database=getenv("DBNAME"),
-                                                user=getenv("DBUID"),
-                                                password=getenv("DBPW"))
-        cursor = connection.cursor()
-
-        cursor.execute(f"SELECT balance FROM Users WHERE id = {ctx.author.id}")
-        bal = cursor.fetchone()
-
-        if bal == None:
-            return await ctx.reply("You have not made an account yet, run bal to create your account")
-        
-        if bal[0] < bet:
-            return await ctx.reply("You have insufficent balance")
-
         d1: Deck = Deck()
         player: Hand = Hand()
         dealer: Hand = Hand()
@@ -305,21 +289,14 @@ class Games(commands.Cog):
         if state == 'player':
             msg += f'\n{ctx.author.display_name} Wins!'
             msg += f'\n+{bet}'
-            cursor.execute(f"UPDATE Users SET balance = {bal[0]+bet} WHERE id = {ctx.author.id}")
-            cursor.execute(f"UPDATE Users SET bjwin = bjwin + 1 WHERE id = {ctx.author.id}")
         elif state == 'dealer':
             msg += f'\nHitoha Wins!'
             msg += f'\n-{bet}'
-            cursor.execute(f"UPDATE Users SET balance = {bal[0]-bet} WHERE id = {ctx.author.id}")
-            cursor.execute(f"UPDATE Users SET bjloss = bjloss + 1 WHERE id = {ctx.author.id}")
         elif state == 'tie':
             msg += "\nGame ended in a tie!"
 
         
         await message.edit(content=msg)
-        connection.commit()
-        cursor.close()
-        connection.close()
 
     @commands.command(
     aliases=['ttt'], 
