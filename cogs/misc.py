@@ -8,7 +8,7 @@ from typing import Optional
 from os import getenv, remove
 import asyncio
 import azure.cognitiveservices.speech as speechsdk
-
+import io
 
 scheduler = AsyncIOScheduler()
 
