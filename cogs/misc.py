@@ -197,19 +197,26 @@ class Misc(commands.Cog):
     async def on_message_delete(self, msg):
         channelId = msg.channel.id
 
-        self.deletedMessages[channelId] = msg
+        self.deletedMessages[channelId] = {"message": msg, "type": "delete"}
 
-    @commands.command(name="snipe", description="Gets the most recently deleted message")
+    @commands.Cog.listener()
+    async def on_message_edit(self, before, after):
+        channelId = before.channel.id
+
+        self.deletedMessages[channelId] = {"message": before, "type": "edit"}
+
+    @commands.command(name="snipe", description="Gets the most recently deleted or edited message")
     async def snipe(self, ctx):
         if ctx.channel.id in self.deletedMessages:
-            message = self.deletedMessages[ctx.channel.id]
+            message = self.deletedMessages[ctx.channel.id]["message"]
+            snipe_type = self.deletedMessages[ctx.channel.id]["type"]
 
-            embed = discord.Embed(title="Deleted Message", 
+            embed = discord.Embed(title="Deleted Message" if snipe_type == "delete" else "Edited Message", 
                                 color=discord.Color.random())
             
             embed.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
 
-            embed.add_field(name="__Message Content__", value=message.content, inline=False)
+            embed.add_field(name="__Original Message Content__", value=message.content, inline=False)
             embed.add_field(name="__Time sent__", value=f"<t:{int(message.created_at.timestamp())}:f>")
             
             if message.attachments: #checking for attachments
