@@ -178,9 +178,7 @@ class Games(commands.Cog):
         self.bot = bot
 
     @commands.command(name="blackjack", aliases=['bj'], description="Start a game of blackjack")
-    async def blackjack(self, ctx, bet: int):
-        if bet < 1:
-            return await ctx.reply("Unable to bet nothing")
+    async def blackjack(self, ctx):
 
         d1: Deck = Deck()
         player: Hand = Hand()
@@ -288,10 +286,8 @@ class Games(commands.Cog):
 
         if state == 'player':
             msg += f'\n{ctx.author.display_name} Wins!'
-            msg += f'\n+{bet}'
         elif state == 'dealer':
             msg += f'\nHitoha Wins!'
-            msg += f'\n-{bet}'
         elif state == 'tie':
             msg += "\nGame ended in a tie!"
 
