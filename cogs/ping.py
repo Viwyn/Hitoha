@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord import app_commands
 
 class Ping(commands.Cog):
     def __init__(self, bot):
@@ -14,6 +15,11 @@ class Ping(commands.Cog):
     async def pong(self, ctx):
         lag = round(self.bot.latency * 1000)
         await ctx.send(f"Ping! \nLatency: {lag}ms")
+
+    @app_commands.command(name="ping", description="Pings me and returns the latency")
+    async def slash_ping(self, interaction:discord.Interaction):
+        lag = round(self.bot.latency * 1000)
+        await interaction.response.send_message(f"Pong! \nLatency: {lag}ms")
         
 async def setup(bot):
-    await bot.add_cog(Ping(bot))
+    await bot.add_cog(Ping(bot), guilds = [discord.Object(id=726416360783216683)])

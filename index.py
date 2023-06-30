@@ -12,10 +12,11 @@ intents = discord.Intents.all()
 intents.message_content = True
 openai.api_key=getenv("OPENAI")
 
-bot = commands.Bot(command_prefix=getenv('PREFIX'), intents=intents, case_insensitive=True)
+bot = commands.Bot(command_prefix=getenv('PREFIX'), intents=intents, case_insensitive=True, application_id=getenv("APP"))
 
 @bot.event
 async def on_ready():
+    await bot.tree.sync(guild=discord.Object(id=726416360783216683))
     print("Ready!")
 
 async def load():
@@ -31,7 +32,7 @@ async def on_command_error(ctx, error):
 async def main():
     async with bot:
         await load()
-        await bot.start(getenv('BOT')) #replace HITOHA with bot token
+        await bot.start(getenv('BOT'))
 
 if __name__ == '__main__':
     asyncio.run(main())
