@@ -22,4 +22,4 @@ class Ping(commands.Cog):
         await interaction.response.send_message(f"Pong! \nLatency: {lag}ms")
         
 async def setup(bot):
-    await bot.add_cog(Ping(bot), guilds = [discord.Object(id=726416360783216683)])
+    await bot.add_cog(Ping(bot))

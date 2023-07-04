@@ -3,12 +3,14 @@ from discord.ext import commands
 from os import getenv
 import requests
 import langcodes
+from discord import app_commands
+from typing import Optional
 
 class Translate(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    def translate(self, text, to_lang):
+    def translate(self, text, to_lang, from_lang = None):
         key = getenv("AZURETRANS")
         url = "https://api.cognitive.microsofttranslator.com/translate"
         location = "southeastasia"
@@ -17,6 +19,9 @@ class Translate(commands.Cog):
             'api-version': '3.0',
             'to': [to_lang]
         }
+
+        if from_lang:
+            params['from'] = from_lang
 
         headers = {
             'Ocp-Apim-Subscription-Key': key,
@@ -73,6 +78,34 @@ class Translate(commands.Cog):
 
             await reaction.message.add_reaction(reaction.emoji)
             await reaction.message.reply(embed=embed, mention_author=False)
+
+
+    @app_commands.command(name="translate", description="Translates text")
+    @app_commands.choices(ori_lang=[
+        app_commands.Choice(name="English", value="en"),
+        app_commands.Choice(name="Chinese", value="zh"),
+        app_commands.Choice(name="Japanese", value="ja"),
+        app_commands.Choice(name="Korean", value="kr"),
+        app_commands.Choice(name="Indonesian", value="id"),
+        app_commands.Choice(name="German", value="de"),
+        app_commands.Choice(name="Russian", value="ru"),        
+    ])
+    @app_commands.choices(to_lang=[
+        app_commands.Choice(name="English", value="en"),
+        app_commands.Choice(name="Chinese", value="zh"),
+        app_commands.Choice(name="Japanese", value="ja"),
+        app_commands.Choice(name="Korean", value="kr"),
+        app_commands.Choice(name="Indonesian", value="id"),
+        app_commands.Choice(name="German", value="de"),
+        app_commands.Choice(name="Russian", value="ru"),        
+    ])
+    async def slash_translate(self, interaction:discord.Interaction, ori_lang:Optional[app_commands.Choice[str]], to_lang:app_commands.Choice[str], msg:str):
+        response = self.translate(msg, to_lang.value, ori_lang)
+
+        ori_lang = response[0]['detectedLanguage']['language']
+        translation = response[0]['translations'][0]['text']
+
+        await interaction.response.send_message(f"### __Translated__\n{interaction.user.mention}: {translation}", allowed_mentions=discord.AllowedMentions.none())
 
 async def setup(bot):
     await bot.add_cog(Translate(bot))

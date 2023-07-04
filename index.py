@@ -16,7 +16,7 @@ bot = commands.Bot(command_prefix=getenv('PREFIX'), intents=intents, case_insens
 
 @bot.event
 async def on_ready():
-    await bot.tree.sync(guild=discord.Object(id=726416360783216683))
+    await bot.tree.sync()
     print("Ready!")
 
 async def load():

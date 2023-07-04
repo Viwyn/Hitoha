@@ -147,14 +147,6 @@ class Misc(commands.Cog):
         await vc.disconnect()
         remove(filename)
 
-    @commands.command(name="calculate", aliases=['cal'], description="Calculate an equation")
-    async def calculate(self, ctx, *eq):
-        equation = " ".join(eq)
-
-        equation = equation.replace("^", "**")
-
-        return await ctx.send(eval(equation))
-
     @commands.command(case_insensitive=True, hidden=True)
     @commands.is_owner()
     async def msgchannel(self, ctx, channelid:int, *words):
@@ -229,6 +221,12 @@ class Misc(commands.Cog):
             await ctx.send(embed=embed)
         else:
             await ctx.send("No deleted messages")
+
+    @commands.command(name="sync", hidden=True)
+    @commands.is_owner()
+    async def sync(self, ctx):
+        num = await ctx.bot.tree.sync(guild=ctx.guild)
+        await ctx.reply(f"Successfully synced {len(num)} commands.")
 
 scheduler.start()
 
