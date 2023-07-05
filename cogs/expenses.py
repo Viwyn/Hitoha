@@ -36,31 +36,41 @@ class Expenses(commands.Cog):
         for msg in chat_history:
             for embed in msg.embeds:
                 data = embed.to_dict()
-                print(data)
 
                 if data["title"] != "Expenses":
                     continue
 
-                print("Calculating")
                 if data["fields"][0]["value"] == "Spending":
-                    net -= abs(float(data["fields"][1]["value"]))
-                else:
                     net += abs(float(data["fields"][1]["value"]))
+                else:
+                    continue
 
-                print("net")
-                type_count[data["fields"][3]["name"]] += abs(float(data["fields"][1]["value"]))
-                print("finish calculatiung")
+                type_count[data["fields"][3]["value"]] += abs(float(data["fields"][1]["value"]))
 
         #creating pie chart
-        print("drawing pie chart")
         data_stream = BytesIO()
 
-        data = np.array(list(type_count.values()))
-        labels = list(type_count.keys())
+        chart_data = {k:v for k, v in type_count.items() if v != 0}
 
-        plt.pie(data, labels=labels)
+        data = np.array(list(chart_data.values()))
+        labels = list(chart_data.keys())
+        # explode = tuple(0.1 for key in chart_data.keys())
+        explode = tuple(0 for key in chart_data.keys())
+
+        fig, ax = plt.subplots(figsize=(7, 3.5))
+
+        def data_display(x):
+            return '{:.2f}%\n({:.0f})'.format(x, net*x/100)
+
+        patches, texts, pcts = ax.pie(data, labels=labels, explode=explode, autopct=data_display, textprops={'size': 'large'}, startangle=90)
+
+        plt.setp(pcts, color='white')
+        plt.setp(texts, fontweight=600, color='white')
+
+        ax.set_title(f"Expenses data for {interaction.user.display_name.capitalize()}", fontsize=20, color='white')
+        plt.legend(loc="upper right")
+
         plt.savefig(data_stream, format="png", transparent=True)
-        plt.show()
         plt.close()
 
         data_stream.seek(0)
@@ -122,7 +132,7 @@ class Expenses(commands.Cog):
         embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
 
         embed.add_field(name="**__Type__**", value=exp_type.name, inline=False)
-        embed.add_field(name="**__Amount__**", value=amount*exp_type.value)
+        embed.add_field(name="**__Amount__**", value="{:.2f}".format(amount*exp_type.value))
         embed.add_field(name="**__Payment Method__**", value=method.name)
         embed.add_field(name="**__Reason__**", value=reason.name, inline=False)
         
