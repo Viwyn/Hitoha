@@ -38,7 +38,7 @@ class Expenses(commands.Cog):
             for embed in msg.embeds:
                 data = embed.to_dict()
 
-                if data["title"] != "Expenses" or data["author"]["name"] != interaction.user.display_name:
+                if data["title"] != "Expenses" or data["author"]["name"] != interaction.user.name:
                     continue
 
                 if data["fields"][0]["value"] == "Spending":
@@ -70,7 +70,7 @@ class Expenses(commands.Cog):
         plt.setp(pcts, color='white')
         plt.setp(texts, fontweight=600, color='white')
 
-        ax.set_title(f"Expenses data for {interaction.user.display_name.capitalize()}", fontsize=20, color='white')
+        ax.set_title(f"Expenses data for {interaction.user.name.capitalize()}", fontsize=20, color='white')
         plt.legend(title="Categories", bbox_to_anchor=(1.75, 1), loc='upper right', borderaxespad=0)
 
         plt.savefig(data_stream, format="png", transparent=True)
@@ -80,7 +80,7 @@ class Expenses(commands.Cog):
         chart = discord.File(data_stream, filename="pie_chart.png")
 
         #embed for pie chart
-        embed = discord.Embed(title=f"Expenses data for {interaction.user.display_name.capitalize()}", 
+        embed = discord.Embed(title=f"Expenses data for {interaction.user.name.capitalize()}", 
                                 color=discord.Color.random())
 
         embed.add_field(name="__Income__", value="+" + "{:.2f}".format(income))
@@ -141,7 +141,7 @@ class Expenses(commands.Cog):
                                 color=discord.Color.green() if exp_type.value > 0 else discord.Color.red(),
         )
 
-        embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
+        embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar.url)
 
         embed.add_field(name="**__Type__**", value=exp_type.name, inline=False)
         embed.add_field(name="**__Amount__**", value="{:.2f}".format(amount*exp_type.value))
