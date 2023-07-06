@@ -63,7 +63,7 @@ class Expenses(commands.Cog):
         fig, ax = plt.subplots(figsize=(7, 3.5))
 
         def data_display(x):
-            return '{:.1f}%\n({:.0f})'.format(x, expense*x/100)
+            return '{:.1f}%\n({:.2f})'.format(x, expense*x/100)
 
         patches, texts, pcts = ax.pie(data, labels=labels, explode=explode, shadow=True, pctdistance=0.7, autopct=data_display, textprops={'size': 'large'}, startangle=90)
 
