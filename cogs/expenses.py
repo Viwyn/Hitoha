@@ -18,12 +18,13 @@ class Expenses(commands.Cog):
         ])
     async def slash_tabulate(self, interaction:discord.Interaction, hidden:Optional[app_commands.Choice[int]]):
         if not isinstance(interaction.channel, discord.Thread):
-            return await interaction.response.send_message("This command is only available in threads")
-        await interaction.response.defer(ephemeral=True)
+            return await interaction.response.send_message("This command is only available in threads, create a thread and run the command again.")
+        await interaction.response.defer(ephemeral=False if not hidden else bool(hidden.value))
 
         chat_history = [message async for message in interaction.channel.history(limit=None, oldest_first=True) if message.author == self.bot.user and message.embeds]
         
-        net = 0
+        income = 0
+        expense = 0
         type_count = {
             "Food": 0,
             "Bills": 0,
@@ -37,15 +38,17 @@ class Expenses(commands.Cog):
             for embed in msg.embeds:
                 data = embed.to_dict()
 
-                if data["title"] != "Expenses":
+                if data["title"] != "Expenses" or data["author"]["name"] != interaction.user.display_name:
                     continue
 
                 if data["fields"][0]["value"] == "Spending":
-                    net += abs(float(data["fields"][1]["value"]))
+                    expense += abs(float(data["fields"][1]["value"]))
+                    type_count[data["fields"][3]["value"]] += abs(float(data["fields"][1]["value"]))
                 else:
-                    continue
+                    income += abs(float(data["fields"][1]["value"]))
 
-                type_count[data["fields"][3]["value"]] += abs(float(data["fields"][1]["value"]))
+        if expense == 0:
+            return await interaction.followup.send("Apologies, I was unable to find your expenses in this thread. Please use the `expense` command to keep track of your expenses.")
 
         #creating pie chart
         data_stream = BytesIO()
@@ -60,15 +63,15 @@ class Expenses(commands.Cog):
         fig, ax = plt.subplots(figsize=(7, 3.5))
 
         def data_display(x):
-            return '{:.2f}%\n({:.0f})'.format(x, net*x/100)
+            return '{:.1f}%\n({:.0f})'.format(x, expense*x/100)
 
-        patches, texts, pcts = ax.pie(data, labels=labels, explode=explode, autopct=data_display, textprops={'size': 'large'}, startangle=90)
+        patches, texts, pcts = ax.pie(data, labels=labels, explode=explode, shadow=True, pctdistance=0.7, autopct=data_display, textprops={'size': 'large'}, startangle=90)
 
         plt.setp(pcts, color='white')
         plt.setp(texts, fontweight=600, color='white')
 
         ax.set_title(f"Expenses data for {interaction.user.display_name.capitalize()}", fontsize=20, color='white')
-        plt.legend(loc="upper right")
+        plt.legend(title="Categories", bbox_to_anchor=(1.75, 1), loc='upper right', borderaxespad=0)
 
         plt.savefig(data_stream, format="png", transparent=True)
         plt.close()
@@ -79,8 +82,14 @@ class Expenses(commands.Cog):
         #embed for pie chart
         embed = discord.Embed(title=f"Expenses data for {interaction.user.display_name.capitalize()}", 
                                 color=discord.Color.random())
+
+        embed.add_field(name="__Income__", value="+" + "{:.2f}".format(income))
+        embed.add_field(name="__Expense__", value="-" + "{:.2f}".format(expense))
+        embed.add_field(name="__Net__", value="{:.2f}".format(income-expense), inline=False)
         
         embed.set_image(url="attachment://pie_chart.png")
+
+        embed.set_footer(text=f"Date requested: {interaction.created_at.strftime('%d/%m/%Y')}", icon_url=interaction.user.display_avatar.url)
         
         await interaction.followup.send(content="Ok here is the data", embed=embed, file=chart, ephemeral=False if not hidden else bool(hidden.value))
 
@@ -115,6 +124,9 @@ class Expenses(commands.Cog):
         reason:app_commands.Choice[str],
         date:Optional[str]
         ):
+        if not isinstance(interaction.channel, discord.Thread):
+            return await interaction.response.send_message("This command is only available in threads, create a thread and run the command again.")
+        
         await interaction.response.defer()
 
         if date:
