@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 from discord.ui import View
+from discord import app_commands
+from typing import Optional
 
 class PfpView(View):
     def __init__(self, embed, embed0):
@@ -78,6 +80,51 @@ class Profile(commands.Cog):
         view = PfpView(embed=embed, embed0=embed0)
     
         await ctx.send(embed=embed, view=view)
+
+    @app_commands.command(name="profile", description="Gets the profile details of a user")
+    @app_commands.describe(member="Specify a user")
+    async def slash_profile(self, interaction:discord.Interaction, member:Optional[discord.Member] = None):
+        await interaction.response.defer()
+
+        if not member:
+            member =  interaction.user
+
+        user = await self.bot.fetch_user(member.id)
+        
+        #creating embed
+        embed = discord.Embed(color=user.accent_color if user.accent_color else discord.Color.random(), title="**Profile Details**")
+        if user.avatar: #setting thumbnail
+            embed.set_thumbnail(url=user.avatar.with_size(256).url)
+        else:
+            embed.set_thumbnail(url=user.default_avatar.with_size(256).url)
+
+        embed.set_author(name=user.name, icon_url=user.display_avatar.with_size(128).url)
+
+        #names
+        embed.add_field(name="__Username__", value=user.name)
+        if user.global_name != user.name:
+            embed.add_field(name="__Display Name__", value=user.global_name)
+        if member.nick:
+            embed.add_field(name="__Server Nickname__", value=member.nick, inline=False)
+
+        #mentions
+        embed.add_field(name="__Mention__", value=user.mention, inline=False)
+
+        #adding id
+        embed.add_field(name="__ID__", value=f"```java\n{user.id}```", inline=False)
+
+        #dates
+        embed.add_field(name="__Date Account Created__", value=f"<t:{int(user.created_at.timestamp())}>")
+        embed.add_field(name="__Date Joined Server__", value=f"<t:{int(member.joined_at.timestamp())}>")
+
+        #roles
+        roles = list(role.mention for role in member.roles)
+        embed.add_field(name="__Roles__", value=" ".join(roles), inline=False)
+
+        if user.banner: #adding banner
+            embed.set_image(url=user.banner.url)
+
+        await interaction.followup.send(content="", embed=embed)
 
 async def setup(bot):
     await bot.add_cog(Profile(bot))

@@ -11,7 +11,7 @@ class Translate(commands.Cog):
         self.bot = bot
 
     def translate(self, text, to_lang, from_lang = None):
-        key = getenv("AZURETRANS")
+        key = getenv("AZURETRANS") #replace AZURETRANS with azure translator api key
         url = "https://api.cognitive.microsofttranslator.com/translate"
         location = "southeastasia"
 
@@ -100,12 +100,14 @@ class Translate(commands.Cog):
         app_commands.Choice(name="Russian", value="ru"),        
     ])
     async def slash_translate(self, interaction:discord.Interaction, ori_lang:Optional[app_commands.Choice[str]], to_lang:app_commands.Choice[str], msg:str):
+        await interaction.response.defer(ephemeral=False)
+        
         response = self.translate(msg, to_lang.value, ori_lang)
 
         ori_lang = response[0]['detectedLanguage']['language']
         translation = response[0]['translations'][0]['text']
 
-        await interaction.response.send_message(f"### __Translated__\n{interaction.user.mention}: {translation}", allowed_mentions=discord.AllowedMentions.none())
+        await interaction.followup.send(f"### __Translated__\n{interaction.user.mention}: {translation}", allowed_mentions=discord.AllowedMentions.none())
 
 async def setup(bot):
     await bot.add_cog(Translate(bot))

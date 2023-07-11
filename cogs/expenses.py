@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord import app_commands
 from typing import Optional
 import matplotlib.pyplot as plt
+import matplotlib.dates as DateFormatter
 import numpy as np
 from datetime import datetime
 from io import BytesIO
@@ -33,6 +34,7 @@ class Expenses(commands.Cog):
             "Entertainment": 0,
             "Others": 0,
         }
+        date_count = {}
 
         for msg in chat_history:
             for embed in msg.embeds:
@@ -42,8 +44,14 @@ class Expenses(commands.Cog):
                     continue
 
                 if data["fields"][0]["value"] == "Spending":
-                    expense += abs(float(data["fields"][1]["value"]))
-                    type_count[data["fields"][3]["value"]] += abs(float(data["fields"][1]["value"]))
+                    value = abs(float(data["fields"][1]["value"]))
+                    expense += value
+                    type_count[data["fields"][3]["value"]] += value
+                    date = datetime.strptime(data["footer"]["text"].split(" ")[1], '%d/%m/%Y')
+                    if date in date_count:
+                        date_count[date] += value
+                    else:
+                        date_count[date] = value
                 else:
                     income += abs(float(data["fields"][1]["value"]))
 
@@ -51,7 +59,7 @@ class Expenses(commands.Cog):
             return await interaction.followup.send("Apologies, I was unable to find your expenses in this thread. Please use the `expense` command to keep track of your expenses.")
 
         #creating pie chart
-        data_stream = BytesIO()
+        data_stream_pie = BytesIO()
 
         chart_data = {k:v for k, v in type_count.items() if v != 0}
 
@@ -73,31 +81,60 @@ class Expenses(commands.Cog):
         ax.set_title(f"Expenses data for {interaction.user.name.capitalize()}", fontsize=20, color='white')
         plt.legend(title="Categories", bbox_to_anchor=(1.75, 1), loc='upper right', borderaxespad=0)
 
-        plt.savefig(data_stream, format="png", transparent=True)
+        plt.savefig(data_stream_pie, format="png", transparent=True)
         plt.close()
 
-        data_stream.seek(0)
-        chart = discord.File(data_stream, filename="pie_chart.png")
+        data_stream_pie.seek(0)
+        chart = discord.File(data_stream_pie, filename="pie_chart.png")
 
         #embed for pie chart
-        embed = discord.Embed(title=f"Expenses data for {interaction.user.name.capitalize()}", 
+        embed_pie = discord.Embed(title=f"Expenses data for {interaction.user.name.capitalize()}", 
                                 color=discord.Color.random())
 
-        embed.add_field(name="__Income__", value="+" + "{:.2f}".format(income))
-        embed.add_field(name="__Expense__", value="-" + "{:.2f}".format(expense))
-        embed.add_field(name="__Net__", value="{:.2f}".format(income-expense), inline=False)
+        embed_pie.add_field(name="__Income__", value="+" + "{:.2f}".format(income))
+        embed_pie.add_field(name="__Expense__", value="-" + "{:.2f}".format(expense))
+        embed_pie.add_field(name="__Net__", value="{:.2f}".format(income-expense), inline=False)
         
-        embed.set_image(url="attachment://pie_chart.png")
+        embed_pie.set_image(url="attachment://pie_chart.png")
 
-        embed.set_footer(text=f"Date requested: {interaction.created_at.strftime('%d/%m/%Y')}", icon_url=interaction.user.display_avatar.url)
+        embed_pie.set_footer(text=f"Date requested: {interaction.created_at.strftime('%d/%m/%Y')}", icon_url=interaction.user.display_avatar.url)
         
-        await interaction.followup.send(content="Ok here is the data", embed=embed, file=chart, ephemeral=False if not hidden else bool(hidden.value))
+        #ploting line graph
+        data_stream_graph = BytesIO()
+
+        sorted_dates = dict((key, value) for key, value in sorted(date_count.items(), key=lambda x: x[0]))
+
+        plt.plot_date(sorted_dates.keys(), sorted_dates.values(), 'b')
+        
+        #formatting x axis labels
+        date_format = DateFormatter.DateFormatter('%d/%m')
+        plt.gca().xaxis.set_major_formatter(date_format)
+
+        plt.xlabel("Date")
+        plt.ylabel("Amount Spent")
+        plt.title("Amount Spent per Day")
+        plt.xticks(rotation=50)
+
+        plt.savefig(data_stream_graph, format="png")
+        plt.close()
+
+        data_stream_graph.seek(0)
+        graph = discord.File(data_stream_graph, filename="line_graph.png")
+
+        #embed for chart
+        embed_chart = discord.Embed(color=discord.Color.random())
+
+        embed_chart.set_image(url="attachment://line_graph.png")
+
+        #send reply to command
+        await interaction.followup.send(content="Ok here is the data", embeds=[embed_pie, embed_chart], files=[chart, graph], ephemeral=False if not hidden else bool(hidden.value))
 
     @app_commands.command(name="expense", description="Add a expense to the channel")
     @app_commands.describe(method="Method of payment")
     @app_commands.describe(amount="Amount that was spent/gained")
     @app_commands.describe(reason="Reason for transaction")
     @app_commands.describe(date="Date of expense (dd/mm/yyyy)")
+    @app_commands.describe(notes="Additional things to note.")
     @app_commands.choices(method=[
         app_commands.Choice(name="Cash", value=0),
         app_commands.Choice(name="Card", value=1),
@@ -122,7 +159,8 @@ class Expenses(commands.Cog):
         exp_type:app_commands.Choice[int], 
         method:app_commands.Choice[int], 
         reason:app_commands.Choice[str],
-        date:Optional[str]
+        date:Optional[str],
+        notes:Optional[str]
         ):
         if not isinstance(interaction.channel, discord.Thread):
             return await interaction.response.send_message("This command is only available in threads, create a thread and run the command again.")
@@ -147,6 +185,9 @@ class Expenses(commands.Cog):
         embed.add_field(name="**__Amount__**", value="{:.2f}".format(amount*exp_type.value))
         embed.add_field(name="**__Payment Method__**", value=method.name)
         embed.add_field(name="**__Reason__**", value=reason.name, inline=False)
+
+        if notes:
+            embed.add_field(name="**__Notes__**", value=notes, inline=False)
         
         embed.set_footer(text=f"Date: {dateoftrans.strftime('%d/%m/%Y')}")
 
