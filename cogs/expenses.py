@@ -40,7 +40,7 @@ class Expenses(commands.Cog):
             for embed in msg.embeds:
                 data = embed.to_dict()
 
-                if data["title"] != "Expenses" or data["author"]["name"] != interaction.user.name:
+                if "title" not in data or data["title"] != "Expenses" or data["author"]["name"] != interaction.user.name:
                     continue
 
                 if data["fields"][0]["value"] == "Spending":

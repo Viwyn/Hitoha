@@ -2,16 +2,17 @@ import discord
 from discord.ext import commands
 import requests
 import random
-import typing
+from typing import Optional
 from os import getenv
 from requests import JSONDecodeError
+from discord import app_commands
 
 class Image(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command(name="rule34", description="Gets a Rule34 image", aliases=['r34'])
-    async def rule34(self, ctx, count: typing.Optional[int] = 1, *tags):
+    async def rule34(self, ctx, count: Optional[int] = 1, *tags):
         if "18+" not in list(role.name for role in ctx.author.roles) and ctx.author.id != 241138170610188288:
             return await ctx.send("You do not have the 18+ role.")
         
@@ -46,16 +47,9 @@ class Image(commands.Cog):
 
             await ctx.send(embed=embed)
 
-    @commands.command(name="sauce", description="Gets the source material for the image", aliases=["source"])
-    async def sauce(self, ctx, imgurl: typing.Optional[str] = None, similarityreq: typing.Optional[int] = 75):
-        if imgurl == None and len(ctx.message.attachments) == 0:
-            return await ctx.send("Please provide a link or an attachment")
-        
-        if ctx.message.attachments and not imgurl:
-            imgurl = ctx.message.attachments[0].url
-
+    def getsauce(self, link, similarityreq:Optional[float] = 75) -> discord.Embed:
         url = "https://saucenao.com/search.php?"
-        params = {"numres": 5, "db": 999, "api_key": getenv("SAUCENAO"), "output_type": 2, "url": imgurl}
+        params = {"numres": 5, "db": 999, "api_key": getenv("SAUCENAO"), "output_type": 2, "url": link}
 
         response = requests.get(url, params=params)
 
@@ -63,7 +57,7 @@ class Image(commands.Cog):
         results.sort(key=lambda x: x["header"]["similarity"], reverse=True)
 
         embed = discord.Embed(title="__**Details**__", color=discord.Color.random())
-        embed.set_thumbnail(url=imgurl)
+        embed.set_thumbnail(url=link)
         embed.set_author(name="SauceNAO",url="https://saucenao.com/", icon_url="https://i.altapps.net/icons/saucenao-43064.png")
 
         for result in results:
@@ -91,10 +85,36 @@ class Image(commands.Cog):
 
             embed.add_field(name=f"__{index_name} [{similarity}%]__", 
                             value=f"{details}" + "\n".join(links))
+            
+        if not embed.fields:
+            embed.add_field(name="Sorry", value="No sources were found. Try lowering the similarity index and try again!")
+
+        return embed
+
+    @commands.command(name="sauce", description="Gets the source material for the image", aliases=["source"])
+    async def sauce(self, ctx, imgurl: Optional[str] = None, similarityreq: Optional[float] = 75.0):
+        if imgurl == None and len(ctx.message.attachments) == 0:
+            return await ctx.send("Please provide a link or an attachment")
+        
+        if ctx.message.attachments and not imgurl:
+            imgurl = ctx.message.attachments[0].url
+
+        embed = self.getsauce(imgurl, similarityreq)
 
         embed.set_footer(text=f"Requested by {ctx.author.display_name}", icon_url=ctx.author.display_avatar)
 
         await ctx.send(embed=embed)
+
+    @app_commands.command(name="sauce", description="Gets the original source an image")
+    async def slash_sauce(self, interaction:discord.Interaction, attachment:discord.Attachment, similarity:Optional[float] = 75.0):
+        await interaction.response.defer()
+        link = attachment.url
+
+        embed = self.getsauce(link, similarityreq=similarity)
+
+        embed.set_footer(text=f"Requested by {interaction.user.display_name}", icon_url=interaction.user.display_avatar)
+
+        await interaction.followup.send(content="", embed=embed)
 
 async def setup(bot):
     await bot.add_cog(Image(bot))

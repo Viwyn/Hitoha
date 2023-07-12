@@ -29,6 +29,11 @@ async def on_command_error(ctx, error):
     await ctx.reply(error)
     print(f"{ctx.author.name}: {error}")
 
+@bot.event
+async def on_app_command_error(interaction, error):
+    await interaction.response.send_message(error)
+    print(f"{interaction.user.name}: {error}")
+
 async def main():
     async with bot:
         await load()
