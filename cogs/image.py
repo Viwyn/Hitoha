@@ -106,6 +106,8 @@ class Image(commands.Cog):
         await ctx.send(embed=embed)
 
     @app_commands.command(name="sauce", description="Gets the original source an image")
+    @app_commands.describe(attachment="File to check")
+    @app_commands.describe(similarity="How similar must the image be to be included (default=75)")
     async def slash_sauce(self, interaction:discord.Interaction, attachment:discord.Attachment, similarity:Optional[float] = 75.0):
         await interaction.response.defer()
         link = attachment.url

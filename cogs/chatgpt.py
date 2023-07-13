@@ -4,25 +4,32 @@ import openai
 from os import remove
 import asyncio
 import json
+from discord import app_commands
+from typing import Optional
 
 class ChatGPT(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.convo_data = {}
 
+    def askgpt(self, messages):
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=messages
+            )
+        return response
+
     @commands.command(name="ask", description="Ask me a question")
     async def ask(self, ctx, *, question = commands.parameter(description="The question that you want to ask me")):
         if question == "":
             question = "Hello"
 
-        async with ctx.channel.typing():
-            response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
+        async  with ctx.channel.typing():
+            messages = [
                 {"role": "system", "content": "You are a discord bot called Hitoha that was coded by Riaru that replies to questions asked by users only."},
                 {"role": "user", "content": " ".join(question)}
-                ]    
-            )
+                ]   
+            response = self.askgpt(messages)
 
             parsed = response["choices"][0]["message"]["content"]
             length = len(parsed)
@@ -65,10 +72,7 @@ class ChatGPT(commands.Cog):
         while(True):
             try:
                 async with ctx.channel.typing():
-                    response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
-                    messages=  self.convo_data[author]["history"]
-                    )
+                    response = self.askgpt(self.convo_data[author]["history"])
 
                 parsed = json.loads(str(response))["choices"][0]["message"]["content"]
                 length = len(parsed)
@@ -120,6 +124,50 @@ class ChatGPT(commands.Cog):
 
         if response.content == "end":
             await thread.delete()   
+
+    @app_commands.command(name="chatgpt", description="Ask ChatGPT")
+    @app_commands.describe(prompt="Type your questions or instructions")
+    @app_commands.describe(hidden="Whether the response should be hidden or not")
+    @app_commands.choices(hidden=[
+        app_commands.Choice(name="True", value=1),
+        app_commands.Choice(name="False", value=0)
+    ])
+    async def slash_chatgpt(self, interaction:discord.Interaction, prompt:str, hidden:Optional[app_commands.Choice[int]]):
+        await interaction.response.defer(ephemeral=hidden.value if hidden else False)
+
+        messages = [
+            {"role": "system", "content": "You are a discord bot called Hitoha that was coded by Riaru that replies to questions asked by users only."},
+            {"role": "user", "content": " ".join(prompt)}
+            ]   
+        response = self.askgpt(messages)
+
+        parsed = response["choices"][0]["message"]["content"]
+        length = len(parsed)
+
+        if length > 4096:
+            print(length)
+            splitted_text = list(parsed[i:i+4090] for i in range(0, len(parsed), 4090)) 
+            embeds = []
+
+            for no, text in enumerate(splitted_text):
+                embed = discord.Embed(title=f"ChatGPT Response", 
+                                color=discord.Color.brand_green(),
+                                description=text)
+                
+                embed.set_author(name=f"Part {no+1}/{len(embeds)}")
+            
+                embed.set_footer(text="Powered by GPT-3.5")
+
+            await interaction.followup.send(content="", embeds=embeds, ephemeral=hidden.value if hidden else False)
+
+        else:
+            embed = discord.Embed(title=f"ChatGPT Response", 
+                                color=discord.Color.brand_green(),
+                                description=parsed)
+            
+            embed.set_footer(text="Powered by GPT-3.5")
+
+            await interaction.followup.send(content="", embed=embed, ephemeral=hidden.value if hidden else False)
 
 async def setup(bot):
     await bot.add_cog(ChatGPT(bot))
