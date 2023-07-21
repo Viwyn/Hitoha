@@ -17,7 +17,8 @@ class Translate(commands.Cog):
 
         params = {
             'api-version': '3.0',
-            'to': [to_lang]
+            'to': [to_lang],
+            'toScript': 'latn'
         }
 
         if from_lang:
@@ -66,10 +67,28 @@ class Translate(commands.Cog):
 
             ori_lang = response[0]['detectedLanguage']['language']
             translation = response[0]['translations'][0]['text']
+            transliteration = None
+            try:
+                transliteration = response[0]['translations'][0]['transliteration']['text']
+            except KeyError:
+                pass
 
             embed = discord.Embed(title=f"__{self.getLangName(ori_lang, lang)} → {self.getLangName(lang, lang)}__", 
                                 color=discord.Color.random(),
                                 description=f"{translation}")
+            
+            embed0 = None
+
+            if transliteration:
+                if len(transliteration) > 1020:
+                    embed0 = discord.Embed(title=f"__{self.getLangName(ori_lang, lang)} → {self.getLangName(lang, lang)}__ *(Transliterate)*", 
+                                    color=discord.Color.random(),
+                                    description=f"{transliteration}")
+                    embed0.set_author(icon_url="https://connectoricons-prod.azureedge.net/releases/v1.0.1623/1.0.1623.3210/microsofttranslator/icon.png",
+                                name="Translator")
+                    embed0.set_footer(text=f"Requested by {user.display_name}", icon_url=user.display_avatar)
+                else:
+                    embed.add_field(name="__Transliteration__", value=transliteration)
 
             embed.set_author(icon_url="https://connectoricons-prod.azureedge.net/releases/v1.0.1623/1.0.1623.3210/microsofttranslator/icon.png",
                             name="Translator")
@@ -77,7 +96,11 @@ class Translate(commands.Cog):
             embed.set_footer(text=f"Requested by {user.display_name}", icon_url=user.display_avatar)
 
             await reaction.message.add_reaction(reaction.emoji)
-            await reaction.message.reply(embed=embed, mention_author=False)
+
+            if embed0:
+                await reaction.message.reply(embeds=[embed,embed0], mention_author=False)
+            else:
+                await reaction.message.reply(embed=embed, mention_author=False)
 
 
     @app_commands.command(name="translate", description="Translates text")
@@ -106,8 +129,16 @@ class Translate(commands.Cog):
 
         ori_lang = response[0]['detectedLanguage']['language']
         translation = response[0]['translations'][0]['text']
+        transliteration = None
+        try:
+            transliteration = response[0]['translations'][0]['transliteration']['text']
+        except KeyError as e:
+            pass
 
-        await interaction.followup.send(f"### __Translated__\n{interaction.user.mention}: {translation}", allowed_mentions=discord.AllowedMentions.none())
+        if transliteration:
+            await interaction.followup.send(f"### __Translated__\n{interaction.user.mention}: {translation} ({transliteration})" , allowed_mentions=discord.AllowedMentions.none())
+        else:
+            await interaction.followup.send(f"### __Translated__\n{interaction.user.mention}: {translation}" , allowed_mentions=discord.AllowedMentions.none())
 
 async def setup(bot):
     await bot.add_cog(Translate(bot))
