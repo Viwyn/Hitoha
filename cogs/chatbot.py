@@ -26,8 +26,6 @@ class ChatBot(commands.Cog):
             question = "Hello"
 
         async  with ctx.channel.typing():
-            response = await self.askgpt(question)
-            
             response = model.generate_content(question, stream=True, safety_settings=[], generation_config=genai.types.GenerationConfig(candidate_count=1))
         
             for chunk in response:
