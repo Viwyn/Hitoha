@@ -4,13 +4,11 @@ from discord.ui import Button, View
 from dotenv import load_dotenv
 import os
 from os import getenv
-import openai
 import asyncio
 
 load_dotenv()
 intents = discord.Intents.all()
 intents.message_content = True
-openai.api_key=getenv("OPENAI")
 
 bot = commands.Bot(command_prefix=getenv('PREFIX'), intents=intents, case_insensitive=True, application_id=getenv("APP"))
 

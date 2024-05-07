@@ -3,6 +3,8 @@ from discord.ext import commands
 from youtube_dl import YoutubeDL
 from random import shuffle
 import asyncio
+from typing import Optional
+import requests
 
 class Music(commands.Cog):
     def __init__(self, bot):
@@ -115,7 +117,7 @@ class Music(commands.Cog):
         if search_query.startswith("https:") or search_query.startswith("http:"):
             pass
         else:
-            return await ctx.send("Not a URL use search instead")
+            return await ctx.send("Not a URL use search command instead")
 
         vc = ctx.author.voice
         if vc is None:
