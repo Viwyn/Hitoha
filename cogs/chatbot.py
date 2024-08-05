@@ -23,9 +23,6 @@ class ChatBot(commands.Cog):
 
     @commands.command(name="ask", description="Ask me a question")
     async def ask(self, ctx, *, question = commands.parameter(description="The question that you want to ask me")):
-        
-
-
         if question == "":
             question = "Hello"
 
@@ -34,7 +31,7 @@ class ChatBot(commands.Cog):
                 HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
                 HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
                 HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-                HarmCategory.HARM_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
             }, 
             generation_config=genai.types.GenerationConfig(candidate_count=1))
         
