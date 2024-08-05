@@ -27,13 +27,17 @@ class ChatBot(commands.Cog):
             question = "Hello"
 
         async  with ctx.channel.typing():
-            response = model.generate_content(question, stream=True, safety_settings={
-                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
-            }, 
-            generation_config=genai.types.GenerationConfig(candidate_count=1))
+            try:
+                response = model.generate_content(question, stream=True, safety_settings={
+                    HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+                    HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+                    HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+                    HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+                }, 
+                generation_config=genai.types.GenerationConfig(candidate_count=1))
+            except ValueError:
+                await ctx.send("Sorry but I cannot answer that :P")
+                return
         
             for chunk in response:
                 await ctx.send(chunk.text)
