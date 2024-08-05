@@ -8,6 +8,7 @@ from typing import Optional
 from os import getenv
 from dotenv import load_dotenv
 import google.generativeai as genai
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
 load_dotenv()
 
@@ -22,11 +23,20 @@ class ChatBot(commands.Cog):
 
     @commands.command(name="ask", description="Ask me a question")
     async def ask(self, ctx, *, question = commands.parameter(description="The question that you want to ask me")):
+        
+
+
         if question == "":
             question = "Hello"
 
         async  with ctx.channel.typing():
-            response = model.generate_content(question, stream=True, safety_settings=[], generation_config=genai.types.GenerationConfig(candidate_count=1))
+            response = model.generate_content(question, stream=True, safety_settings={
+                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+            }, 
+            generation_config=genai.types.GenerationConfig(candidate_count=1))
         
             for chunk in response:
                 await ctx.send(chunk.text)
