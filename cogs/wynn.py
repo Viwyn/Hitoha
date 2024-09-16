@@ -16,9 +16,9 @@ class Wynn(commands.Cog):
 
         player_data = get(wynn_api_url + username + "?fullResult").json()
 
-        if player_data['Error']:
+        if "Error" in player_data:
             return await ctx.reply("I was unable to find a player with that username.")
-
+        
         head_url = "https://mc-heads.net/avatar/" + player_data['uuid']
 
         char_data = player_data['characters'][player_data['activeCharacter']]
@@ -58,7 +58,7 @@ class Wynn(commands.Cog):
 
         player_data = get(wynn_api_url + username + "?fullResult").json()
         
-        if player_data['Error']:
+        if "Error" in player_data:
             return await ctx.reply("I was unable to find a player with that username.")
         
         player_char_data = player_data['characters'][player_data['activeCharacter']]
