@@ -3,8 +3,6 @@ from discord.ext import commands
 from youtube_dl import YoutubeDL
 from random import shuffle
 import asyncio
-from typing import Optional
-import requests
 
 class Music(commands.Cog):
     def __init__(self, bot):
