@@ -14,13 +14,10 @@ class Wynn(commands.Cog):
     async def wynnstats(self, ctx, username):
         wynn_api_url = "https://api.wynncraft.com/v3/player/"
 
-        player_data = get(wynn_api_url + username).json()
+        player_data = get(wynn_api_url + username + "?fullResult").json()
         head_url = "https://mc-heads.net/avatar/" + player_data['uuid']
 
-        char_data = get(wynn_api_url + username + "/characters/" + player_data['activeCharacter']).json()
-
-        print(dumps(player_data, indent=4))
-        print(dumps(char_data, indent=4))
+        char_data = player_data['characters'][player_data['activeCharacter']]
 
         embed = discord.Embed(title=player_data['username'],
                         url="https://wynncraft.com/stats/player/" + player_data['uuid'],
