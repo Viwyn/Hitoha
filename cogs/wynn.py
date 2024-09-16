@@ -15,6 +15,10 @@ class Wynn(commands.Cog):
         wynn_api_url = "https://api.wynncraft.com/v3/player/"
 
         player_data = get(wynn_api_url + username + "?fullResult").json()
+
+        if player_data['Error']:
+            return await ctx.reply("I was unable to find a player with that username.")
+
         head_url = "https://mc-heads.net/avatar/" + player_data['uuid']
 
         char_data = player_data['characters'][player_data['activeCharacter']]
@@ -53,6 +57,10 @@ class Wynn(commands.Cog):
         riri_char_data = riri_data['characters'][riri_data['activeCharacter']]
 
         player_data = get(wynn_api_url + username + "?fullResult").json()
+        
+        if player_data['Error']:
+            return await ctx.reply("I was unable to find a player with that username.")
+        
         player_char_data = player_data['characters'][player_data['activeCharacter']]
 
         embed = discord.Embed(colour=discord.Color(int(player_data['legacyRankColour']['main'][1:], 16)) if player_data['legacyRankColour'] else discord.Colour.light_gray(),
